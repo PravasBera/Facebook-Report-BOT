@@ -1,0 +1,50 @@
+{
+  "flows": {
+    "profile_bullying_sexual_exploitation": {
+      "name": "Profile → Bullying → Sexual exploitation",
+      "description": "Profile report → Bullying, harassment or abuse → sexual exploitation → submit",
+      "steps": [
+        { "type": "click_selector", "value": "div[role='button'][aria-label*='See Options']" },
+        { "type": "wait", "ms": 700 },
+        { "type": "click_text", "value": ["Find support or report profile", "Report profile", "Report"] },
+        { "type": "wait", "ms": 700 },
+        { "type": "click_text", "value": ["Bullying, harassment or abuse"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Seems like sexual exploitation", "Threatening to share my nude images"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Submit", "Done", "Send"] },
+        { "type": "wait", "ms": 800 }
+      ]
+    },
+
+    "profile_under18_nudity_threat": {
+      "name": "Profile → Problem involving someone under 18 → Threatening to share nude images",
+      "steps": [
+        { "type": "click_selector", "value": "div[role='button'][aria-label*='See Options']" },
+        { "type": "wait", "ms": 700 },
+        { "type": "click_text", "value": ["Report profile", "Find support or report profile"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Problem involving someone under 18"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Threatening to share my nude images"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Submit", "Done"] }
+      ]
+    },
+
+    "post_violent_showing_violence": {
+      "name": "Post → Violent → Showing violence",
+      "steps": [
+        { "type": "click_selector", "value": "xpath://button[contains(@aria-label,'Actions') or contains(@aria-label,'more')]" },
+        { "type": "wait", "ms": 500 },
+        { "type": "click_text", "value": ["Report post", "Report"] },
+        { "type": "wait", "ms": 600 },
+        { "type": "click_text", "value": ["Violent, hateful or disturbing content"] },
+        { "type": "wait", "ms": 500 },
+        { "type": "click_text", "value": ["Showing violence, death or severe injury"] },
+        { "type": "wait", "ms": 500 },
+        { "type": "click_text", "value": ["Submit", "Done"] }
+      ]
+    }
+  }
+}
