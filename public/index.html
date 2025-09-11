@@ -18,7 +18,7 @@
 
   <!-- 🔹 HEADER -->
   <header class="app-header">
-    <h1>⚡ Facebook Auto Report Tool ⚡</h1>
+    <h1>⚡ Facebook Automation Tool ⚡</h1>
     <p>👤 Author: <b>PRAVAS BERA</b> &nbsp;|&nbsp; 🌍 Version: <b>Premium</b> &nbsp;|&nbsp; 🇮🇳 Country: <b>INDIA</b></p>
     <p class="team">🔥 INDIAN DANGER OF BULLET TEAM 🔥</p>
   </header>
@@ -39,32 +39,28 @@
       <h1 class="text-3xl font-bold mb-6">⚡ FB Auto Reporter</h1>
 
       <!-- Dynamic Form -->
-      <form id="reportForm" class="space-y-4 bg-white p-6 rounded shadow" enctype="multipart/form-data">
+      <form id="reportForm" class="space-y-4 bg-white p-6 rounded shadow">
         <div>
           <label class="block text-sm font-medium">Target URL / ID</label>
-          <input id="targetUrl" type="text" name="targetUrl" class="w-full border p-2 rounded" placeholder="https://facebook.com/... or ID" required />
+          <input type="text" id="targetUrl" class="w-full border p-2 rounded" placeholder="https://facebook.com/... or ID" required />
         </div>
 
-        <div id="setsField">
-          <label class="block text-sm font-medium">Choose Preset Set</label>
-          <select id="setSelect" class="w-full border p-2 rounded">
-            <option value="1">Set 1</option>
-            <option value="2">Set 2</option>
-            <option value="3">Set 3</option>
-            <option value="4">Set 4</option>
-            <option value="5">Set 5</option>
+        <div>
+          <label class="block text-sm font-medium">Flow Set</label>
+          <select id="flowSet" class="w-full border p-2 rounded">
+            <option value="">-- Select Flow --</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Upload cookies (one file: cookies.json)</label>
-          <input id="cookiesFile" type="file" name="cookies" class="w-full border p-2 rounded" accept=".json" />
-          <p class="text-xs text-gray-500 mt-1">Upload a cookies JSON exported from Puppeteer/Chrome for the account used to report.</p>
+          <label class="block text-sm font-medium">Upload Cookies (cookies.txt)</label>
+          <input type="file" id="cookieFile" class="w-full border p-2 rounded" />
         </div>
 
         <div class="flex space-x-4">
-          <button id="startBtn" type="button" class="bg-blue-600 text-white px-4 py-2 rounded">▶ Start</button>
-          <button id="stopBtn" type="button" class="bg-red-600 text-white px-4 py-2 rounded">⏹ Stop</button>
+          <button type="button" onclick="uploadCookies()" class="bg-gray-600 text-white px-4 py-2 rounded">📂 Upload Cookies</button>
+          <button type="button" onclick="startJob()" class="bg-blue-600 text-white px-4 py-2 rounded">▶ Start</button>
+          <button type="button" onclick="stopJob()" class="bg-red-600 text-white px-4 py-2 rounded">⏹ Stop</button>
         </div>
       </form>
 
@@ -82,62 +78,81 @@
   </footer>
 
   <script>
-    function log(msg){
-      const l = document.getElementById('logs');
-      l.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '<br/>';
-      l.scrollTop = l.scrollHeight;
-    }
+    let selectedType = null;
+    const flowSetSelect = document.getElementById("flowSet");
 
-    document.querySelectorAll('.type-btn').forEach(btn=>{
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('setsField').style.display = btn.dataset.type ? 'block' : 'none';
-        document.getElementById('reportForm').dataset.type = btn.dataset.type;
+    document.querySelectorAll(".type-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedType = btn.dataset.type;
+        loadFlowOptions();
       });
     });
 
-    document.getElementById('startBtn').addEventListener('click', async () => {
-      const type = document.getElementById('reportForm').dataset.type || 'profile';
-      const url = document.getElementById('targetUrl').value.trim();
-      const setIndex = document.getElementById('setSelect').value || '1';
-      const cookiesFile = document.getElementById('cookiesFile').files[0];
-
-      if (!url) return alert('Target URL required');
-      const form = new FormData();
-      form.append('targetUrl', url);
-      form.append('type', type);
-      form.append('setIndex', setIndex);
-      if (cookiesFile) form.append('cookies', cookiesFile);
-
-      log('Sending start request to server...');
-      const res = await fetch('/start-report', { method: 'POST', body: form });
-      const json = await res.json();
-      if (json.ok) log('Server accepted job: ' + (json.message || 'started'));
-      else log('Start failed: ' + (json.message || JSON.stringify(json)));
-    });
-
-    document.getElementById('stopBtn').addEventListener('click', async () => {
-      log('Sending stop request...');
-      const res = await fetch('/stop-report', { method: 'POST' });
-      const json = await res.json();
-      if (json.ok) log('Stop requested');
-      else log('Stop failed: ' + JSON.stringify(json));
-    });
-
-    // SSE logs
-    const evt = new EventSource('/events');
-    evt.addEventListener('log', e => {
-      try {
-        const d = JSON.parse(e.data);
-        log(d.text || JSON.stringify(d));
-      } catch (err) {
-        log(e.data);
+    function loadFlowOptions() {
+      flowSetSelect.innerHTML = "<option value=''>-- Select Flow --</option>";
+      if (!selectedType) return;
+      // Just showing placeholders — actual list comes from flows.js on server
+      for (let i = 1; i <= 5; i++) {
+        flowSetSelect.innerHTML += `<option value="${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}Set${i}">
+          ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Set ${i}
+        </option>`;
       }
-    });
-    evt.addEventListener('info', e => { const d=JSON.parse(e.data); log('[INFO] ' + d.text); });
-    evt.addEventListener('error', e => { const d=JSON.parse(e.data); log('[ERROR] ' + d.text); });
-    evt.onerror = () => { log('SSE disconnected'); };
+    }
+
+    function log(msg) {
+      const logs = document.getElementById("logs");
+      logs.innerHTML += msg + "<br>";
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    async function uploadCookies() {
+      const fileInput = document.getElementById("cookieFile");
+      if (!fileInput.files.length) return alert("Please select a cookies.txt file");
+      const formData = new FormData();
+      formData.append("cookies", fileInput.files[0]);
+      const res = await fetch("/uploadCookies", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.ok) log("✅ Cookies uploaded");
+      else log("❌ Cookie upload failed: " + (data.message || data.error));
+    }
+
+    async function startJob() {
+      if (!selectedType) return alert("Please select report type");
+      const targetUrl = document.getElementById("targetUrl").value;
+      const setId = document.getElementById("flowSet").value;
+      if (!targetUrl || !setId) return alert("Target URL and Flow Set required");
+
+      const body = { sessionId:"ui", targetUrl, setType:selectedType, setId, headless:false };
+      const res = await fetch("/start", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+      const data = await res.json();
+      if (data.ok) {
+        log("🚀 Job started");
+        startSSE();
+      } else {
+        log("❌ Failed to start: " + (data.message || data.error));
+      }
+    }
+
+    async function stopJob() {
+      const res = await fetch("/stop", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({sessionId:"ui"}) });
+      const data = await res.json();
+      if (data.ok) log("⏹ Stop requested");
+      else log("⚠️ No active job");
+    }
+
+    function startSSE() {
+      const evt = new EventSource("/events?sessionId=ui");
+      evt.onmessage = (e) => { log("ℹ " + e.data); };
+      evt.addEventListener("log", (e) => { log("🔹 " + e.data); });
+      evt.addEventListener("info", (e) => { log("ℹ️ " + e.data); });
+      evt.addEventListener("warn", (e) => { log("⚠️ " + e.data); });
+      evt.addEventListener("error", (e) => { log("❌ " + e.data); });
+      evt.addEventListener("success", (e) => { log("✅ " + e.data); });
+      evt.addEventListener("done", (e) => { log("🎯 " + e.data); });
+      evt.addEventListener("fatal", (e) => { log("💥 " + e.data); });
+    }
   </script>
 </body>
 </html>
