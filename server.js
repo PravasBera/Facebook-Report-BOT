@@ -313,8 +313,18 @@ app.get('/events', (req, res) => {
 
 // upload cookies (admin)
 app.post('/uploadCookies', requireAdmin, upload.single('cookies'), (req, res) => {
+  try {if (req.file) {
   try {
-    if (req.file) return res.json({ ok: true, path: req.file.path });
+    const target = path.join(UPLOAD_DIR, 'cookies.txt');
+    // overwrite cookies.txt with uploaded file content
+    fs.copyFileSync(req.file.path, target);
+    // optional: remove original upload if you want
+    try { fs.unlinkSync(req.file.path); } catch(e){}
+    return res.json({ ok: true, path: 'uploads/cookies.txt' });
+  } catch (e) {
+    return res.status(500).json({ ok:false, error: e.message });
+  }
+}
     else if (req.body && req.body.text) {
       const txt = String(req.body.text || '').trim();
       if (!txt) return res.status(400).json({ ok: false, message: 'Empty text' });
@@ -369,6 +379,7 @@ app.get('/status', requireAdmin, (req, res) => {
 
 app.get('/exampleCookies', (req, res) => {
   res.type('text/plain').send('fr=...; xs=...; c_user=1000...; datr=...; sb=...; wd=390x844;');
+});
 
 // global error handlers
 app.use((err, req, res, next) => {
