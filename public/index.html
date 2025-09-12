@@ -1,158 +1,165 @@
-<!DOCTYPE html>
+<!-- public/index.html -->
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>FB Auto Reporter Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .active { background-color: #2563eb; color: white; }
-    .app-header { background: linear-gradient(to right, #1e3a8a, #2563eb); color: white; padding: 1rem; text-align: center; }
-    .app-header h1 { font-size: 2rem; font-weight: bold; }
-    .team { margin-top: 5px; font-weight: bold; color: #facc15; }
-    .footer { background: #1f2937; color: #9ca3af; text-align: center; padding: 10px; margin-top: auto; }
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto;}
+    .active{background:#2563eb;color:#fff}
+    .app-header{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:1rem;text-align:center}
+    .footer{background:#1f2937;color:#9ca3af;text-align:center;padding:10px;margin-top:1rem}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
   </style>
 </head>
-<body class="bg-gray-100 flex flex-col min-h-screen">
-
-  <!-- 🔹 HEADER -->
+<body class="bg-gray-100 min-h-screen flex flex-col">
   <header class="app-header">
-    <h1>⚡ Facebook Automation Tool ⚡</h1>
+    <h1 class="text-2xl font-bold">⚡ Facebook Automation Tool ⚡</h1>
     <p>👤 Author: <b>PRAVAS BERA</b> &nbsp;|&nbsp; 🌍 Version: <b>Premium</b> &nbsp;|&nbsp; 🇮🇳 Country: <b>INDIA</b></p>
-    <p class="team">🔥 INDIAN DANGER OF BULLET TEAM 🔥</p>
+    <p class="text-yellow-300 font-semibold">🔥 INDIAN DANGER OF BULLET TEAM 🔥</p>
   </header>
 
   <div class="flex flex-1">
-    <!-- Sidebar -->
-    <div class="w-64 bg-white shadow-lg p-4">
-      <h2 class="text-2xl font-bold mb-6">🚨 Report Type</h2>
-      <ul class="space-y-2">
-        <li><button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-100" data-type="profile">Profile</button></li>
-        <li><button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-100" data-type="page">Page</button></li>
-        <li><button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-100" data-type="post">Post</button></li>
-      </ul>
-    </div>
+    <aside class="w-64 bg-white p-4 shadow">
+      <h2 class="text-xl font-bold mb-4">🚨 Report Type</h2>
+      <div class="space-y-2">
+        <button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50" data-type="profile">Profile</button>
+        <button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50" data-type="page">Page</button>
+        <button class="type-btn w-full text-left px-3 py-2 rounded hover:bg-blue-50" data-type="post">Post</button>
+      </div>
+      <hr class="my-4"/>
+      <label class="block text-sm font-medium">Admin token</label>
+      <input id="adminToken" class="w-full border p-2 rounded" placeholder="x-admin-token" />
+    </aside>
 
-    <!-- Main -->
-    <div class="flex-1 p-8 overflow-y-auto">
-      <h1 class="text-3xl font-bold mb-6">⚡ FB Auto Reporter</h1>
+    <main class="flex-1 p-6 overflow-auto">
+      <h1 class="text-3xl font-bold mb-4">⚡ FB Auto Reporter</h1>
 
-      <!-- Dynamic Form -->
-      <form id="reportForm" class="space-y-4 bg-white p-6 rounded shadow">
+      <div class="bg-white p-4 rounded shadow space-y-4">
         <div>
           <label class="block text-sm font-medium">Target URL / ID</label>
-          <input type="text" id="targetUrl" class="w-full border p-2 rounded" placeholder="https://facebook.com/... or ID" required />
+          <input id="targetUrl" class="w-full border p-2 rounded" placeholder="https://facebook.com/..." />
         </div>
 
         <div>
           <label class="block text-sm font-medium">Flow Set</label>
-          <select id="flowSet" class="w-full border p-2 rounded">
-            <option value="">-- Select Flow --</option>
-          </select>
+          <select id="flowSet" class="w-full border p-2 rounded"><option value="">-- select --</option></select>
         </div>
 
         <div>
           <label class="block text-sm font-medium">Upload Cookies (cookies.txt)</label>
-          <input type="file" id="cookieFile" class="w-full border p-2 rounded" />
+          <input id="cookieFile" type="file" class="w-full" />
+          <p class="text-xs text-gray-500">Each line in cookies.txt = one account cookie string (fr=...; xs=...; c_user=...; ...)</p>
         </div>
 
-        <div class="flex space-x-4">
-          <button type="button" onclick="uploadCookies()" class="bg-gray-600 text-white px-4 py-2 rounded">📂 Upload Cookies</button>
-          <button type="button" onclick="startJob()" class="bg-blue-600 text-white px-4 py-2 rounded">▶ Start</button>
-          <button type="button" onclick="stopJob()" class="bg-red-600 text-white px-4 py-2 rounded">⏹ Stop</button>
+        <div class="flex space-x-3">
+          <button onclick="uploadCookies()" class="bg-gray-700 text-white px-4 py-2 rounded">📂 Upload Cookies</button>
+          <button onclick="startJob()" class="bg-blue-600 text-white px-4 py-2 rounded">▶ Start</button>
+          <button onclick="stopJob()" class="bg-red-600 text-white px-4 py-2 rounded">⏹ Stop</button>
         </div>
-      </form>
-
-      <!-- Logs -->
-      <div class="mt-8">
-        <h2 class="text-xl font-bold mb-2">📜 Live Logs</h2>
-        <div id="logs" class="bg-black text-green-400 p-3 h-64 overflow-y-auto rounded text-sm font-mono"></div>
       </div>
-    </div>
+
+      <section class="mt-6">
+        <h2 class="text-xl font-bold">📜 Live Logs</h2>
+        <div id="logs" class="bg-black text-green-400 p-3 h-64 overflow-auto rounded mono text-sm"></div>
+      </section>
+    </main>
   </div>
 
-  <!-- 🔹 FOOTER -->
-  <footer class="footer">
-    © 2025 | Facebook Automation Tool | Developed With ❤️ by BULLET TEAM ☠️
-  </footer>
+  <footer class="footer">© 2025 | Facebook Automation Tool | Developed With ❤️ by BULLET TEAM ☠️</footer>
 
-  <script>
-    let selectedType = null;
-    const flowSetSelect = document.getElementById("flowSet");
+<script>
+let flows = null;
+let selectedType = null;
+const flowSetSelect = document.getElementById('flowSet');
+const logsEl = document.getElementById('logs');
+function log(msg){ logsEl.innerHTML += `${msg}<br>`; logsEl.scrollTop = logsEl.scrollHeight; }
 
-    document.querySelectorAll(".type-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedType = btn.dataset.type;
-        loadFlowOptions();
-      });
+// load flows from server
+async function loadFlows(){
+  try{
+    const r = await fetch('/flows');
+    if (!r.ok) throw new Error('flows fetch failed');
+    flows = await r.json();
+    log('Flows loaded');
+  }catch(e){ log('Flows load error: '+ e.message); flows = {profileSets:[],pageSets:[],postSets:[]}; }
+}
+loadFlows();
+
+document.querySelectorAll('.type-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedType = btn.dataset.type;
+    populateFlowSets();
+  });
+});
+
+function populateFlowSets(){
+  flowSetSelect.innerHTML = '<option value="">-- select --</option>';
+  if (!flows || !selectedType) return;
+  const key = selectedType + 'Sets';
+  const list = flows[key] || [];
+  for (const s of list) {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name || s.id;
+    flowSetSelect.appendChild(opt);
+  }
+}
+
+// upload cookies (admin)
+async function uploadCookies(){
+  const f = document.getElementById('cookieFile').files[0];
+  const token = document.getElementById('adminToken').value;
+  if (!token) return alert('Admin token required');
+  if (!f) return alert('Select cookies.txt');
+  const fd = new FormData();
+  fd.append('cookies', f);
+  const res = await fetch('/uploadCookies', { method:'POST', headers: { 'x-admin-token': token }, body: fd });
+  const j = await res.json();
+  if (j.ok) { log('✅ Cookies uploaded'); } else { log('❌ Upload failed: ' + (j.message || j.error)); }
+}
+
+// start job
+async function startJob(){
+  const token = document.getElementById('adminToken').value;
+  const targetUrl = document.getElementById('targetUrl').value.trim();
+  const setId = document.getElementById('flowSet').value;
+  if (!token) return alert('Admin token required');
+  if (!selectedType) return alert('Pick type (profile/page/post)');
+  if (!targetUrl) return alert('targetUrl required');
+  if (!setId) return alert('Pick flow set');
+  const body = { sessionId: 'ui', targetUrl, setType: selectedType, setId };
+  const res = await fetch('/start', { method: 'POST', headers: { 'Content-Type':'application/json', 'x-admin-token': token }, body: JSON.stringify(body) });
+  const j = await res.json();
+  if (j.ok) { log('🚀 Job started'); startSSE(); } else { log('❌ Start failed: ' + (j.message||j.error)); }
+}
+
+// stop job
+async function stopJob(){
+  const token = document.getElementById('adminToken').value;
+  if (!token) return alert('Admin token required');
+  const res = await fetch('/stop', { method:'POST', headers:{'Content-Type':'application/json','x-admin-token':token}, body: JSON.stringify({ sessionId:'ui' }) });
+  const j = await res.json();
+  if (j.ok) log('⏹ Stop requested'); else log('⚠ ' + (j.message||j.error));
+}
+
+// SSE
+let sse = null;
+function startSSE(){
+  if (sse) try { sse.close(); } catch {}
+  sse = new EventSource('/events?sessionId=ui');
+  sse.onopen = () => log('SSE connected');
+  sse.onmessage = e => { try{ const p = JSON.parse(e.data); log('MSG: ' + (p.msg || JSON.stringify(p))); }catch{ log('RAW: '+ e.data); } };
+  ['log','info','warn','error','success','done','fatal'].forEach(ev=>{
+    sse.addEventListener(ev, e => {
+      try{ const p = JSON.parse(e.data); log(`[${ev}] ${p.msg || JSON.stringify(p)}`); } catch { log(`[${ev}] ${e.data}`); }
     });
-
-    function loadFlowOptions() {
-      flowSetSelect.innerHTML = "<option value=''>-- Select Flow --</option>";
-      if (!selectedType) return;
-      // Just showing placeholders — actual list comes from flows.js on server
-      for (let i = 1; i <= 5; i++) {
-        flowSetSelect.innerHTML += `<option value="${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}Set${i}">
-          ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Set ${i}
-        </option>`;
-      }
-    }
-
-    function log(msg) {
-      const logs = document.getElementById("logs");
-      logs.innerHTML += msg + "<br>";
-      logs.scrollTop = logs.scrollHeight;
-    }
-
-    async function uploadCookies() {
-      const fileInput = document.getElementById("cookieFile");
-      if (!fileInput.files.length) return alert("Please select a cookies.txt file");
-      const formData = new FormData();
-      formData.append("cookies", fileInput.files[0]);
-      const res = await fetch("/uploadCookies", { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.ok) log("✅ Cookies uploaded");
-      else log("❌ Cookie upload failed: " + (data.message || data.error));
-    }
-
-    async function startJob() {
-      if (!selectedType) return alert("Please select report type");
-      const targetUrl = document.getElementById("targetUrl").value;
-      const setId = document.getElementById("flowSet").value;
-      if (!targetUrl || !setId) return alert("Target URL and Flow Set required");
-
-      const body = { sessionId:"ui", targetUrl, setType:selectedType, setId, headless:false };
-      const res = await fetch("/start", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
-      const data = await res.json();
-      if (data.ok) {
-        log("🚀 Job started");
-        startSSE();
-      } else {
-        log("❌ Failed to start: " + (data.message || data.error));
-      }
-    }
-
-    async function stopJob() {
-      const res = await fetch("/stop", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({sessionId:"ui"}) });
-      const data = await res.json();
-      if (data.ok) log("⏹ Stop requested");
-      else log("⚠️ No active job");
-    }
-
-    function startSSE() {
-      const evt = new EventSource("/events?sessionId=ui");
-      evt.onmessage = (e) => { log("ℹ " + e.data); };
-      evt.addEventListener("log", (e) => { log("🔹 " + e.data); });
-      evt.addEventListener("info", (e) => { log("ℹ️ " + e.data); });
-      evt.addEventListener("warn", (e) => { log("⚠️ " + e.data); });
-      evt.addEventListener("error", (e) => { log("❌ " + e.data); });
-      evt.addEventListener("success", (e) => { log("✅ " + e.data); });
-      evt.addEventListener("done", (e) => { log("🎯 " + e.data); });
-      evt.addEventListener("fatal", (e) => { log("💥 " + e.data); });
-    }
-  </script>
+  });
+}
+</script>
 </body>
 </html>
