@@ -5,291 +5,280 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Facebook Automation Tool</title>
   <style>
-    body { font-family: Inter, Arial; background:#f4f7fb; margin:0; padding:20px; color:#111; display:flex; flex-direction:column; min-height:100vh;}
-    .card { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(20,30,60,0.08); margin-bottom:16px;}
-    header { font-size:20px; font-weight:700; color:#1869ff; margin-bottom:20px; display:flex;justify-content:space-between;align-items:center;}
-    .meta { font-size:13px; color:#0b1220; opacity:0.8; text-align:right; }
-    input[type=text], textarea { width:100%; padding:12px; border-radius:8px; border:1px solid #e4e8f0; box-sizing:border-box; }
-    .radio-row { display:flex; gap:10px; margin:12px 0; }
-    .options-list { display:block; margin-top:12px; }
-    .option-item { display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px; border:1px solid #eef2f7; margin-bottom:10px; background:#fff;}
-    .btn { padding:10px 16px; border-radius:10px; cursor:pointer; border:none; font-weight:700;}
-    .btn-primary { background:#1869ff; color:white; }
-    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:#1869ff; }
-    .flex { display:flex; gap:10px; align-items:center; }
-    .small { font-size:13px; color:#666; }
-    pre{ background:#0b1220; color:#0aff8d; padding:12px; border-radius:8px; max-height:300px; overflow:auto; white-space:pre-wrap; word-break:break-word;}
-    footer { margin-top:auto; text-align:center; font-size:13px; color:#666; padding:12px 0; }
-    .badge { font-size:12px; color:#fff; background:#06b6d4; padding:6px 8px; border-radius:8px;}
+    /* --- basic layout --- */
+    :root{
+      --accent:#1869ff;
+      --muted:#6b7280;
+      --card-bg:#ffffff;
+      --page-bg:#f4f7fb;
+      --danger:#ff4d4f;
+      --success:#16a34a;
+    }
+    html,body{height:100%}
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background:var(--page-bg);
+      margin:0; padding:22px;
+      color:#111; display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    /* --- header (made larger & full-width, removed right badge) --- */
+    header {
+      background: linear-gradient(90deg,#1565ff 0%, #2ea6ff 100%);
+      color:white;
+      border-radius:14px;
+      padding:18px 22px;
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow: 0 8px 26px rgba(20,30,60,0.12);
+      margin-bottom:18px;
+    }
+    header .title { font-size:22px; font-weight:800; display:flex;align-items:center; gap:10px; }
+    header .meta { text-align:right; font-size:13px; opacity:0.95; }
+    header .meta b{ font-weight:700; }
+
+    /* --- cards --- */
+    .card {
+      background:var(--card-bg);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 8px 18px rgba(18,24,40,0.06);
+      margin-bottom:16px;
+    }
+
+    /* --- form controls --- */
+    label{ display:block; font-weight:600; margin-bottom:8px; color:#0b1220; }
+    input[type=text], textarea { width:100%; padding:14px 12px; border-radius:10px; border:1px solid #e6edf7; box-sizing:border-box; font-size:14px; }
+    .radio-row { display:flex; gap:12px; margin:8px 0 14px 0; }
+    .radio-row label{ background:#fbfdff; padding:8px 12px; border-radius:10px; border:1px solid #eef6ff; cursor:pointer; display:flex; align-items:center; gap:8px; font-weight:600; }
+
+    /* --- options list --- */
+    .options-list { display:block; margin-top:6px; }
+    .option-item { display:flex; gap:12px; align-items:center; padding:14px; border-radius:12px; border:1px solid #eef2f7; margin-bottom:12px; background:#fff; font-size:15px; }
+
+    /* --- bigger buttons (Start/Stop) --- */
+    .controls { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+    .btn { padding:12px 18px; border-radius:12px; cursor:pointer; border:none; font-weight:800; font-size:15px; }
+    .btn-primary { background:var(--accent); color:white; min-width:120px; box-shadow:0 6px 14px rgba(24,105,255,0.22);}
+    .btn-danger { background:var(--danger); color:white; min-width:120px; }
+    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--accent); padding:12px 16px; border-radius:12px; font-weight:800; }
+    .btn-block { flex:1 1 140px; }
+
+    /* --- Choose Report Type card styling (separate larger card) --- */
+    .big-card { border-radius:14px; padding:18px; margin-bottom:14px; background:linear-gradient(180deg,#ffffff,#fbfcff); box-shadow:0 8px 26px rgba(16,24,48,0.06); }
+
+    /* --- Live logs bigger --- */
+    .live-title { font-size:18px; font-weight:800; margin-bottom:10px; }
+    pre { background:#071022; color:#8ef7be; padding:14px; border-radius:10px; max-height:420px; overflow:auto; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
+    .small { font-size:13px; color:var(--muted); }
+
+    /* --- footer --- */
+    footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:10px 0; }
+    @media (min-width:900px){
+      body{padding:36px}
+      header .title{font-size:26px}
+      .card{padding:22px}
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <div>
-    ⚡ <strong>Facebook Automation Tool</strong>
-    <div style="font-size:12px;color:#444;margin-top:6px;">
-      👤 Author: <b>PRAVAS BERA</b> &nbsp;|&nbsp; 🌍 Version: <b>Premium</b> &nbsp;|&nbsp; 🇮🇳 Country: <b>INDIA</b>
+  <!-- BIG HEADER (removed small badge on right; header enlarged) -->
+  <header>
+    <div>
+      <div class="title">⚡ Facebook Automation Tool</div>
+      <div style="margin-top:8px; font-size:13px; opacity:0.95;">
+        👤 Author: <b>PRAVAS BERA</b> &nbsp; | &nbsp; 🌍 Version: <b>Premium</b> &nbsp; | &nbsp; 🇮🇳 Country: <b>INDIA</b>
+      </div>
+      <div style="margin-top:6px; color:#ffbb4a; font-weight:700;">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
     </div>
-    <div style="font-size:12px;color:#b45309;margin-top:6px;">🔥 <b>INDIAN DANGER OF BULLET TEAM</b> 🔥</div>
-  </div>
-
-  <div class="meta">
-    <div class="small">Admin control panel</div>
-    <div style="margin-top:8px;"><span class="badge">Ready</span></div>
-  </div>
-</header>
-
-<div class="card">
-  <label>Enter Admin Token here (x-admin-token)</label>
-  <div style="display:flex; gap:8px; margin-top:8px;">
-    <input id="adminToken" type="text" placeholder="x-admin-token" />
-    <button id="saveToken" class="btn btn-ghost">Save</button>
-  </div>
-</div>
-
-<div class="card">
-  <div class="radio-row">
-    <label><input type="radio" name="rtype" value="profile" checked> Profile</label>
-    <label><input type="radio" name="rtype" value="page"> Page</label>
-    <label><input type="radio" name="rtype" value="post"> Post</label>
-  </div>
-
-  <label>Target URL / ID</label>
-  <input id="target" type="text" placeholder="https://facebook.com/..." />
-
-  <div id="optionsBox" class="options-list"></div>
-
-  <div style="margin-top:12px;">
-    <label>Cookies upload</label><br/>
-    <input id="cookiesFile" type="file" accept=".txt" />
-    <div style="margin-top:8px;" class="flex">
-      <button id="uploadCookies" class="btn btn-ghost">Upload Cookies</button>
-      <button id="startBtn" class="btn btn-primary">Start</button>
-      <button id="stopBtn" class="btn" style="background:#ff4d4f;color:white;">Stop</button>
+    <div style="text-align:right;">
+      <!-- Right side kept for small meta or future controls, but no 'admin badge' -->
+      <div class="small">Control panel</div>
+      <div style="margin-top:8px; font-weight:800; color:#dbeefd; background:rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px;">Ready</div>
     </div>
-    <div class="small" style="margin-top:8px;">Each line in cookies.txt = one cookie string (fr=...; xs=...; c_user=...; ...)</div>
+  </header>
+
+  <!-- Admin token card -->
+  <div class="card">
+    <label>Enter Admin Token here (x-admin-token)</label>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <input id="adminToken" type="text" placeholder="x-admin-token" />
+      <button id="saveToken" class="btn btn-ghost">Save</button>
+    </div>
   </div>
-</div>
 
-<div class="card">
-  <h4>Live Logs</h4>
-  <div id="liveInfo" class="small">Selected: <span id="selectedCount">0</span></div>
-  <pre id="logArea">No logs yet.</pre>
-</div>
+  <!-- CHOOSE REPORT TYPE as a separate BIG card -->
+  <div class="big-card">
+    <label style="font-size:18px; font-weight:800; margin-bottom:8px;">Choose Report Type</label>
+    <div class="radio-row" style="margin-top:12px;">
+      <label><input type="radio" name="rtype" value="profile" checked> Profile</label>
+      <label><input type="radio" name="rtype" value="page"> Page</label>
+      <label><input type="radio" name="rtype" value="post"> Post</label>
+    </div>
 
-<footer>
-  © 2025 | Facebook Automation Tool | Developed With ❤️ by BULLET TEAM ☠️
-</footer>
+    <div style="margin-top:14px;">
+      <label>Target URL / ID</label>
+      <input id="target" type="text" placeholder="https://facebook.com/..." />
+    </div>
+
+    <div id="optionsBox" class="options-list" style="margin-top:14px;"></div>
+  </div>
+
+  <!-- Cookies / Buttons card (buttons made bigger) -->
+  <div class="card">
+    <label style="font-weight:800;">Cookies & Controls</label>
+    <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+      <input id="cookiesFile" type="file" accept=".txt" />
+      <div class="small">Each line in cookies.txt = one cookie string</div>
+    </div>
+
+    <div class="controls" style="margin-top:14px;">
+      <button id="uploadCookies" class="btn btn-ghost btn-block">Upload Cookies</button>
+      <button id="startBtn" class="btn btn-primary btn-block">Start</button>
+      <button id="stopBtn" class="btn btn-danger btn-block">Stop</button>
+    </div>
+  </div>
+
+  <!-- LIVE LOGS - made bigger -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="live-title">Live Logs</div>
+      <div class="small">Selected: <b id="selectedCount">0</b></div>
+    </div>
+    <pre id="logArea">No logs yet.</pre>
+  </div>
+
+  <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
-  // --- option sets (exact same as you listed) ---
+  /* --- same JS logic as provided earlier, adapted to class changes --- */
+
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
     post: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content']
   };
 
-  // DOM
-  const adminInput = document.getElementById('adminToken');
-  const saveToken = document.getElementById('saveToken');
-  const optionsBox = document.getElementById('optionsBox');
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const logArea = document.getElementById('logArea');
-  const selectedCount = document.getElementById('selectedCount');
-  let currentJobId = null;
-  let es = null;
-  let cookiesText = null;
-  let lastStartMode = null; // 'report' or 'start' (for SSE path)
+  const adminInput=document.getElementById('adminToken');
+  const saveToken=document.getElementById('saveToken');
+  const optionsBox=document.getElementById('optionsBox');
+  const startBtn=document.getElementById('startBtn');
+  const stopBtn=document.getElementById('stopBtn');
+  const logArea=document.getElementById('logArea');
+  const selectedCount=document.getElementById('selectedCount');
+  let currentJobId=null; let eventSource=null; let cookiesText=null; let lastStartMode=null;
 
-  // load saved token
-  adminInput.value = localStorage.getItem('adminToken') || '';
-
-  saveToken.onclick = () => {
-    localStorage.setItem('adminToken', adminInput.value.trim());
-    alert('Admin token saved locally');
-  };
-
-  // render options
   function renderOptions(type){
-    optionsBox.innerHTML = '';
+    optionsBox.innerHTML='';
     OPTION_SETS[type].forEach((opt,i)=>{
-      const id = `${type}-opt-${i}`;
-      const div = document.createElement('div');
-      div.className = 'option-item';
-      div.innerHTML = `<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
+      const id=`${type}-opt-${i}`;
+      const div=document.createElement('div');
+      div.className='option-item';
+      div.innerHTML=`<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
       optionsBox.appendChild(div);
     });
     attachOptionListeners();
   }
-
   function attachOptionListeners(){
-    const checkboxes = optionsBox.querySelectorAll('input[type=checkbox]');
-    checkboxes.forEach(ch=>ch.onchange = updateSelectedCount);
+    const checkboxes=optionsBox.querySelectorAll('input[type=checkbox]');
+    checkboxes.forEach(ch=>ch.onchange=updateSelectedCount);
     updateSelectedCount();
   }
   function updateSelectedCount(){
-    const sel = optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
-    selectedCount.textContent = sel;
+    const sel=optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
+    selectedCount.textContent=sel;
   }
-
   document.querySelectorAll('input[name=rtype]').forEach(el=>{
-    el.onchange = ()=> renderOptions(document.querySelector('input[name=rtype]:checked').value);
+    el.onchange=()=>renderOptions(document.querySelector('input[name=rtype]:checked').value);
   });
-
   renderOptions('profile');
 
-  // cookies file read
-  document.getElementById('cookiesFile').onchange = async (e) => {
-    const f = e.target.files[0]; if(!f) return;
-    const txt = await f.text();
-    cookiesText = txt.trim();
-    appendLog(`✅ cookies loaded (${cookiesText.split(/\r?\n/).length} lines)`);
+  saveToken.onclick=()=>{ localStorage.setItem('adminToken',adminInput.value.trim()); alert('Saved token'); };
+  adminInput.value=localStorage.getItem('adminToken')||'';
+
+  document.getElementById('cookiesFile').onchange=async(e)=>{
+    const f=e.target.files[0]; if(!f)return;
+    const text=await f.text(); cookiesText=text.trim();
+    appendLog('✅ cookies loaded: '+(cookiesText.split(/\r?\n/).length)+' lines');
   };
 
-  // upload cookies to server (admin endpoint)
-  document.getElementById('uploadCookies').onclick = async () => {
+  async function postJSON(url, body){
     const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    if (!adminToken) return alert('Admin token required to upload cookies');
-    const f = document.getElementById('cookiesFile').files[0];
-    if (!f) return alert('Choose cookies .txt file first');
-    const fd = new FormData();
-    fd.append('cookies', f);
-    appendLog('Uploading cookies...');
-    try {
-      const res = await fetch('/uploadCookies', { method: 'POST', headers: { 'x-admin-token': adminToken }, body: fd });
-      const j = await res.json();
-      if (j.ok) appendLog('✅ Cookies uploaded to server: ' + (j.path || 'uploads/cookies.txt'));
-      else appendLog('❌ Upload failed: ' + (j.message || j.error || JSON.stringify(j)));
-    } catch (e) { appendLog('❌ Upload error: ' + e.message); }
+    const res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'x-admin-token': adminToken }, body: JSON.stringify(body) });
+    try { return await res.json(); } catch(e){ return { ok:false, message:'Invalid JSON response', status: res.status }; }
+  }
+
+  startBtn.onclick=async()=>{
+    const adminToken=adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if(!adminToken){ alert('Set admin token'); return; }
+    const type=document.querySelector('input[name=rtype]:checked').value;
+    const target=document.getElementById('target').value.trim();
+    if(!target){ alert('Set target URL/ID'); return; }
+    const options=Array.from(optionsBox.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.dataset.text);
+    const payload={ type,target,options,cookies:cookiesText };
+    appendLog('→ Sending /report ...');
+    try{
+      const res = await fetch('/report',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':adminToken}, body:JSON.stringify(payload)});
+      if (res.status === 404) throw new Error('not-found');
+      const data = await res.json();
+      if(data.ok){ currentJobId = data.jobId || ('job_'+Date.now()); lastStartMode='report'; appendLog('✅ Job accepted, id: '+currentJobId); connectLogs(currentJobId); return; }
+      appendLog('❌ /report returned error: '+(data.message||JSON.stringify(data)));
+    }catch(e){
+      appendLog('⚠ /report failed: '+e.message+' — trying fallback /start');
+    }
+
+    // fallback to /start if /report not available
+    try{
+      const j2 = await postJSON('/start', { sessionId:'ui', targetUrl:target, setType:type });
+      if (j2.ok){ currentJobId='ui'; lastStartMode='start'; appendLog('✅ /start ok — session: ui'); connectLogs('ui'); }
+      else appendLog('❌ /start failed: '+(j2.message||JSON.stringify(j2)));
+    }catch(err){ appendLog('❌ start error: '+err.message); }
   };
 
-  // helpers
-  function appendLog(text){
+  stopBtn.onclick=async()=>{
+    if(!currentJobId && lastStartMode!=='start'){ alert('No job running'); return; }
+    const adminToken=adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    appendLog('→ Sending /stop ...');
+    try{
+      const r = await fetch('/stop',{ method:'POST', headers:{ 'Content-Type':'application/json','x-admin-token':adminToken }, body: JSON.stringify({ sessionId: currentJobId || 'ui' })});
+      const j = await r.json();
+      appendLog((j.ok? '✅ Stop requested' : '❌ Stop failed: '+(j.message||JSON.stringify(j))));
+    }catch(e){ appendLog('❌ Stop error: '+e.message); }
+    disconnectLogs();
+  };
+
+  function appendLog(txt){
     const ts = new Date().toLocaleTimeString();
-    logArea.textContent += `[${ts}] ${text}\n`;
+    logArea.textContent += `[${ts}] ${txt}\n`;
     logArea.scrollTop = logArea.scrollHeight;
   }
 
-  // start job: try /report first, fallback to /start
-  startBtn.onclick = async () => {
-    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    if (!adminToken) { alert('Set admin token'); return; }
-    const type = document.querySelector('input[name=rtype]:checked').value;
-    const target = document.getElementById('target').value.trim();
-    if (!target) { alert('Set target URL/ID'); return; }
-    const options = Array.from(optionsBox.querySelectorAll('input[type=checkbox]:checked')).map(i => i.dataset.text);
-    if (!options.length) { if(!confirm('No specific report options selected — continue?')) return; }
-
-    // try /report (user earlier referenced it) — this endpoint may be a custom one returning {ok:true, jobId}
-    const payload = { type, target, options, cookies: cookiesText || null };
-    appendLog('Attempting POST /report ...');
-    try {
-      const r = await fetch('/report', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify(payload) });
-      if (r.status === 404) throw new Error('not-found');
-      const j = await r.json();
-      if (j.ok) {
-        currentJobId = j.jobId || j.sessionId || ('job_' + Date.now());
-        lastStartMode = 'report';
-        appendLog('✅ /report accepted — jobId: ' + currentJobId);
-        connectSSEForJob(currentJobId);
-        return;
-      } else {
-        appendLog('❌ /report failed: ' + (j.message || JSON.stringify(j)));
-        // fallback to /start below
-      }
-    } catch (e) {
-      appendLog('⚠ /report unavailable or error: ' + e.message + ' — falling back to /start');
-    }
-
-    // --- fallback: call /start (server.js expects {sessionId,targetUrl,setType,setId}) ---
-    try {
-      const body = { sessionId: 'ui', targetUrl: target, setType: type, setId: '' };
-      appendLog('Posting to /start (fallback) ...');
-      const r2 = await fetch('/start', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify(body) });
-      const j2 = await r2.json();
-      if (j2.ok) {
-        currentJobId = 'ui';
-        lastStartMode = 'start';
-        appendLog('✅ /start accepted — using sessionId: ui');
-        connectSSEForJob('ui');
-      } else {
-        appendLog('❌ /start failed: ' + (j2.message || JSON.stringify(j2)));
-        alert('Start failed: ' + (j2.message || JSON.stringify(j2)));
-      }
-    } catch (err) {
-      appendLog('❌ start request error: ' + err.message);
-      alert('Network error: ' + err.message);
-    }
-  };
-
-  // stop job
-  stopBtn.onclick = async () => {
-    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    if (!adminToken) { alert('Admin token required'); return; }
-
-    // if lastStartMode was report and we have jobId -> try /stop with jobId or sessionId
-    appendLog('Sending stop request ...');
-    try {
-      // try generic /stop with sessionId 'ui' or jobId if set
-      const sid = currentJobId || 'ui';
-      const res = await fetch('/stop', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify({ sessionId: sid, jobId: currentJobId }) });
-      const j = await res.json();
-      appendLog((j.ok ? '✅ Stop requested' : ('❌ Stop failed: ' + (j.message || JSON.stringify(j)))));
-    } catch (e) {
-      appendLog('❌ Stop error: ' + e.message);
-    } finally {
-      disconnectSSE();
-    }
-  };
-
-  // SSE connection helper (works with server's /events?sessionId=...)
-  function connectSSEForJob(jobId) {
-    disconnectSSE();
-    // normalize jobId -> use as sessionId param
-    const sid = encodeURIComponent(jobId || 'ui');
+  function connectLogs(jobId){
+    disconnectLogs();
+    const sid = encodeURIComponent(jobId||'ui');
     const url = `/events?sessionId=${sid}`;
-    appendLog('Connecting SSE -> ' + url);
-    try {
-      es = new EventSource(url);
-      es.onopen = () => appendLog('SSE connected');
-      es.onmessage = e => {
-        // some servers send plain text or JSON in data; try JSON parse
-        try {
+    appendLog('Connecting to SSE: '+url);
+    try{
+      eventSource = new EventSource(url);
+      eventSource.onopen = ()=> appendLog('SSE connected');
+      eventSource.onmessage = e => {
+        try{
           const d = JSON.parse(e.data);
-          appendLog('[msg] ' + (d.msg || JSON.stringify(d)));
-        } catch (err) {
-          appendLog('[raw] ' + e.data);
+          appendLog(d.msg || JSON.stringify(d));
+        }catch{
+          appendLog(e.data);
         }
       };
-      ['log','info','warn','error','success','done','fatal'].forEach(ev=>{
-        es.addEventListener(ev, e => {
-          try {
-            const p = JSON.parse(e.data);
-            appendLog(`[${ev}] ${p.msg || JSON.stringify(p)}`);
-          } catch {
-            appendLog(`[${ev}] ${e.data}`);
-          }
-        });
-      });
-      es.onerror = (ev) => { appendLog('[SSE] connection error/closed'); es.close(); };
-    } catch (err) {
-      appendLog('SSE error: ' + err.message);
-    }
+      eventSource.onerror = (e) => { appendLog('[SSE] error/closed'); try{ eventSource.close(); }catch{}; eventSource=null; };
+    }catch(err){ appendLog('SSE init error: '+err.message); }
   }
+  function disconnectLogs(){ if(eventSource){ try{ eventSource.close(); }catch{} eventSource=null; appendLog('SSE disconnected'); } currentJobId=null; lastStartMode=null; }
 
-  function disconnectSSE(){
-    if (es) {
-      try { es.close(); } catch {}
-      es = null;
-      appendLog('SSE disconnected');
-    }
-    currentJobId = null;
-  }
+  window.addEventListener('beforeunload',()=>{ disconnectLogs(); });
 
-  // ensure we disconnect when page unloads
-  window.addEventListener('beforeunload', () => { disconnectSSE(); });
 </script>
 </body>
 </html>
