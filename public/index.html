@@ -35,58 +35,44 @@
       flex-wrap:wrap;
     }
 
-    /* Header: improved responsive title */
-    .header-wrap {
-      background: #071025;
-      border-radius:18px;
-      padding:28px;
-      color:#dbeafe;
-      box-shadow: 0 14px 40px rgba(2,6,23,0.6);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      text-align:center;
-      flex: 1 1 60%;
-      min-width:260px;
-      /* ensure header doesn't push other content too far on narrow screens */
-      max-width: 100%;
-    }
-    .header-title {
-  font-size: clamp(14px, 5vw, 32px); /* ছোট ডিভাইসে ছোট হবে */
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px 0;
+.header-wrap{
+  background:#071025;
+  color:#fff;
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(2,6,23,0.5);
+}
 
-  background: var(--header-title-grad);
+.header-title{
+  font-size: clamp(22px, 6vw, 42px); /* responsive size */
+  font-weight:900;
+  margin:0 0 8px;
+  line-height:1.2;
+  white-space:nowrap;   /* FORCE one line */
+  overflow:visible;     /* don’t cut anything */
+  text-overflow:unset;  /* no ... */
+  background: linear-gradient(90deg,#ff5f5f 0%, #ff3db8 50%, #7a5bff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: transparent;
-
-  line-height: 1.2;
-  text-align: center;
-
-  white-space: normal;    /* এখন ব্রেক করতে পারবে */
-  word-break: break-word; /* কেটে না গিয়ে সাইজ কমবে */
 }
-    .header-subline {
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:6px;
-      color:#9fb4d3;
-      font-size:14px;
-    }
-    .header-subline b { color:#fff; font-weight:800; margin:0 6px; }
-    .team-badge {
-      margin-top:10px;
-      color:#4fb0ff;
-      font-weight:900;
-      letter-spacing:0.6px;
-      font-size:15px;
-    }
+
+.header-meta{
+  font-size:14px;
+  color:#9fb4d3;
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+@media(max-width:480px){
+  .header-title{
+    font-size: clamp(18px, 5.5vw, 28px);
+  }
+}
 
     /* Card style */
     .card {
@@ -166,19 +152,14 @@
   <div class="top-row">
     <div class="header-wrap" role="banner" aria-label="Application header">
       <!-- Title: will scale responsively and not break awkwardly -->
-      <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
-
-      <!-- meta line kept compact and centered -->
-      <div class="header-subline" aria-hidden="false">
-        <span>👤 Author: <b>PRAVAS BERA</b></span>
-        <span>|</span>
-        <span>🌍 Version: <b>Premium</b></span>
-        <span>|</span>
-        <span>🇮🇳 Country: <b>INDIA</b></span>
+      <div class="header-wrap">
+  <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
+  <div class="header-meta">
+    <div>👤 Author: <strong>PRAVAS BERA</strong></div>
+    <div>🌍 Version: <strong>Premium</strong></div>
+    <div>🇮🇳 Country: <strong>INDIA</strong></div>
+  </div>
       </div>
-
-      <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
-    </div>
 
     <!-- Report card -->
     <div class="card report-card" role="region" aria-label="Choose report type">
