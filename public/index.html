@@ -3,277 +3,389 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FB Auto Reporter — UI</title>
-
-<!-- Simple Google font -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
+<title>Facebook Automation Tool</title>
 <style>
   :root{
-    --bg:#f6f8fb;
-    --card:#ffffff;
-    --accent:#2b6ef6;
+    --accent:#2563eb;
     --muted:#6b7280;
-    --shadow: 0 10px 30px rgba(10,20,40,0.06);
-    --radius:14px;
+    --card:#fff;
+    --bg:#f3f6fb;
+    --radius:12px;
+    --shadow: 0 6px 18px rgba(16,24,40,0.08);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg); color:#0b1220;}
-  .container{max-width:980px;margin:18px auto;padding:18px;}
+  html,body{height:100%; margin:0; background:linear-gradient(180deg,#e6f0ff 0%, #f7fbff 100%); color:#0f172a;}
+  .wrap{max-width:920px; margin:22px auto; padding:18px;}
   .header{
-    background:linear-gradient(90deg,#2047f0 0%, #3aa0ff 100%);
-    color:white;border-radius:12px;padding:18px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;justify-content:space-between;
+    background:linear-gradient(90deg,#2563eb,#4f46e5);
+    color:white;
+    padding:18px; border-radius:16px; display:flex; gap:18px; align-items:center; justify-content:space-between;
+    box-shadow:var(--shadow);
   }
-  .brand { font-weight:800;font-size:1.15rem; }
-  .subtitle{font-size:0.86rem;opacity:0.95}
-  /* token */
-  .token-card{margin:18px 0;background:var(--card);padding:14px;border-radius:var(--radius);box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;}
-  .token-input{flex:1;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:1rem;background:#f2f5ff;border:1px solid #e6edff}
-  .token-btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
-  /* report type */
-  .report-type{display:flex;gap:10px;justify-content:center;margin:14px 0}
-  .radio-btn{display:flex;align-items:center;gap:10px;background:var(--card);padding:10px 14px;border-radius:12px;border:1px solid transparent;cursor:pointer;box-shadow:0 6px 18px rgba(12,20,40,0.03)}
-  .radio-btn input{transform:scale(1.1)}
-  .radio-btn.active{border-color:rgba(43,110,246,0.16);box-shadow:0 10px 30px rgba(43,110,246,0.08)}
-  /* options */
-  .panel{margin:14px 0;display:flex;gap:18px;align-items:flex-start}
-  .left{flex:1}
-  .right{width:320px;min-width:260px}
-  .options-block{background:var(--card);padding:12px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:12px;transition:all .22s ease}
-  .options-block h3{margin:0 0 8px;font-size:1rem}
-  .opt{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;border:1px solid #f0f2f6;background:#fff;margin-bottom:8px}
-  .opt input{width:20px;height:20px}
-  .btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 16px;border-radius:12px;border:none;font-weight:700;cursor:pointer}
-  .btn.ghost{background:#fff;color:var(--accent);border:1px solid #dbe6ff}
-  .small-muted{font-size:0.9rem;color:var(--muted)}
-  .selected-count{margin-top:8px;font-weight:700;color:#2b2f36;text-align:center}
-  /* responsive */
-  @media (max-width:880px){
-    .panel{flex-direction:column}
-    .right{width:100%}
+  .title{font-weight:700; font-size:20px; letter-spacing:0.2px;}
+  .meta{font-size:13px; opacity:0.95;}
+  .card{background:var(--card); margin-top:18px; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;}
+  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+  .input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6e9ef; background:#fff; font-size:15px;
+    box-sizing:border-box;
+  }
+  .small{font-size:13px; color:var(--muted);}
+  .segmented{display:flex; gap:8px;}
+  .segmented button{padding:10px 14px; border-radius:999px; border:1px solid transparent; background: #fff; cursor:pointer; box-shadow: 0 4px 10px rgba(12, 18, 37, 0.04);}
+  .segmented button.active{background:linear-gradient(90deg,#eef2ff,#e6f0ff); border-color:#c7d2fe; color:#1e293b; font-weight:600;}
+  .label{font-weight:700; margin-bottom:8px;}
+  .options-list{display:flex; flex-direction:column; gap:10px; margin-top:8px;}
+  .opt{display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px; border:1px solid #eef2f8; background:#fff;}
+  .opt input{width:18px; height:18px;}
+  .actions{display:flex; gap:12px; margin-top:12px; align-items:center;}
+  .btn{padding:12px 18px; border-radius:10px; cursor:pointer; border:0; font-weight:700;}
+  .btn-primary{background:var(--accent); color:white;}
+  .btn-ghost{background:#fff; border:1px solid #e6e9ef;}
+  .upload{display:flex; gap:10px; align-items:center;}
+  .logbox{margin-top:14px; border-radius:10px; background:#0f172a; color:#d1fae5; min-height:120px; padding:12px; font-family:monospace; font-size:13px; overflow:auto;}
+  .status{display:flex; gap:10px; align-items:center;}
+  .dot{width:12px; height:12px; border-radius:999px; background:#ef4444;}
+  .dot.running{background:#10b981;}
+  footer{margin-top:18px; text-align:center; color:var(--muted); font-size:13px;}
+  @media (min-width:860px){
+    .grid{display:grid; grid-template-columns:1fr 360px; gap:18px;}
+    .card.side{position:sticky; top:22px; height: fit-content;}
   }
 </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <div class="header">
       <div>
-        <div class="brand">⚡ Facebook Automation Tool</div>
-        <div class="subtitle">Author: PRAVAS BERA — Version: Premium</div>
+        <div class="title">⚡ Facebook Automation Tool</div>
+        <div class="meta">Author: <strong>PRAVAS BERA</strong> • Version: <strong>Premium</strong> • Country: <strong>INDIA</strong></div>
       </div>
-      <div class="subtitle">Country: INDIA</div>
+      <div class="meta small">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
     </div>
 
-    <!-- Admin token -->
-    <div class="token-card">
-      <input id="adminToken" class="token-input" placeholder="Enter Admin Token here (x-admin-token)" />
-      <button id="saveToken" class="token-btn">Save</button>
-    </div>
-
-    <!-- report type -->
-    <div class="report-type" role="radiogroup">
-      <label class="radio-btn active">
-        <input type="radio" name="reportType" value="profile" checked /> <span>Profile</span>
-      </label>
-      <label class="radio-btn">
-        <input type="radio" name="reportType" value="page" /> <span>Page</span>
-      </label>
-      <label class="radio-btn">
-        <input type="radio" name="reportType" value="post" /> <span>Post</span>
-      </label>
-    </div>
-
-    <div class="panel">
-      <div class="left">
-        <!-- target url / id -->
-        <div class="options-block">
-          <h3>Target URL / ID</h3>
-          <input id="target" placeholder="https://facebook.com/..." style="width:100%;padding:12px;border-radius:10px;border:1px solid #eee;font-weight:700" />
-        </div>
-
-        <!-- options - these three blocks shown/hidden by type -->
-        <div id="options-profile" class="options-block" data-type="profile">
-          <h3>Profile Report Options</h3>
-          <label class="opt"><input type="checkbox" name="profileOpt" value="under18"> Problem involving someone under 18</label>
-          <label class="opt"><input type="checkbox" name="profileOpt" value="bullying"> Bullying, harassment or abuse</label>
-          <label class="opt"><input type="checkbox" name="profileOpt" value="violent"> Violent, hateful or disturbing content</label>
-          <label class="opt"><input type="checkbox" name="profileOpt" value="adult"> Adult content</label>
-          <label class="opt"><input type="checkbox" name="profileOpt" value="fake"> Fake profile</label>
-        </div>
-
-        <div id="options-page" class="options-block" data-type="page" hidden>
-          <h3>Page Report Options</h3>
-          <label class="opt"><input type="checkbox" name="pageOpt" value="under18"> Problem involving someone under 18</label>
-          <label class="opt"><input type="checkbox" name="pageOpt" value="bullying"> Bullying, harassment or abuse</label>
-          <label class="opt"><input type="checkbox" name="pageOpt" value="violent"> Violent, hateful or disturbing content</label>
-          <label class="opt"><input type="checkbox" name="pageOpt" value="adult"> Adult content</label>
-          <label class="opt"><input type="checkbox" name="pageOpt" value="fake"> Fake page</label>
-        </div>
-
-        <div id="options-post" class="options-block" data-type="post" hidden>
-          <h3>Post Report Options</h3>
-          <label class="opt"><input type="checkbox" name="postOpt" value="under18"> Problem involving someone under 18</label>
-          <label class="opt"><input type="checkbox" name="postOpt" value="bullying"> Bullying, harassment or abuse</label>
-          <label class="opt"><input type="checkbox" name="postOpt" value="violent"> Violent, hateful or disturbing content</label>
-          <label class="opt"><input type="checkbox" name="postOpt" value="adult"> Adult content</label>
-        </div>
-      </div>
-
-      <div class="right">
-        <div class="options-block">
-          <h3>Cookies upload</h3>
-          <input id="cookiesFile" type="file" accept=".txt" style="width:100%" />
-          <div style="margin-top:12px;display:flex;gap:8px">
-            <button id="uploadCookies" class="btn ghost" style="flex:1">Upload Cookies</button>
-            <button id="startReport" class="btn" style="flex:1">Start</button>
+    <div class="grid" style="margin-top:16px;">
+      <!-- LEFT / MAIN -->
+      <div>
+        <div class="card">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="adminToken" class="input" placeholder="Enter Admin Token here (x-admin-token)" />
+            <button id="saveToken" class="btn btn-ghost">Save</button>
           </div>
-          <div class="small-muted" style="margin-top:10px">Each line in cookies.txt = one cookie string</div>
-        </div>
 
-        <div class="options-block">
-          <h3>Live</h3>
-          <div id="selected-count" class="selected-count">Selected: 0</div>
+          <div style="margin-top:14px;">
+            <div class="label">Choose Report Type</div>
+            <div class="segmented" id="typeButtons">
+              <button data-type="profile" class="active">Profile</button>
+              <button data-type="page">Page</button>
+              <button data-type="post">Post</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="label">Target URL / ID</div>
+            <input id="target" class="input" placeholder="https://facebook.com/..." />
+          </div>
+
+          <div id="optionsContainer" style="margin-top:14px;">
+            <div class="label" id="optionsTitle">Profile Report Options</div>
+            <div class="options-list" id="optionsList">
+              <!-- options inserted by JS -->
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="label">Cookies upload</div>
+            <div class="upload">
+              <input id="cookiesFile" type="file" accept=".txt" />
+              <button id="uploadCookies" class="btn btn-ghost">Upload Cookies</button>
+              <div class="small" id="cookiesStatus">Each line = 1 cookie string</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;" class="actions">
+            <button id="startBtn" class="btn btn-primary">Start</button>
+            <button id="stopBtn" class="btn btn-ghost">Stop</button>
+            <div class="status" style="margin-left:auto;">
+              <div id="serverDot" class="dot"></div>
+              <div id="serverText" class="small">Idle</div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="label">Live Logs</div>
+            <div id="logbox" class="logbox"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT / SIDE -->
+      <div>
+        <div class="card side">
+          <div style="font-weight:700; margin-bottom:8px;">Job Summary</div>
+          <div class="small" id="summary">Selected: 0</div>
+
+          <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f8;" />
+
+          <div style="font-weight:700; margin-bottom:8px;">Flow Set</div>
+          <select id="flowSet" class="input" style="padding:10px;">
+            <option value="">-- select flow --</option>
+            <!-- you can populate these options from server if you want -->
+          </select>
+
+          <div style="margin-top:12px;">
+            <div class="small">Admin token is used in header: <code>x-admin-token</code></div>
+          </div>
         </div>
       </div>
     </div>
+
+    <footer class="small">© 2025 Facebook Automation Tool — Made with ❤️ by INDIAN DANGER OF BULLET TEAM</footer>
   </div>
 
 <script>
-(() => {
-  // UI wiring
-  const radioLabels = Array.from(document.querySelectorAll('.radio-btn'));
-  const radios = Array.from(document.querySelectorAll('input[name="reportType"]'));
-  const blocks = Array.from(document.querySelectorAll('.options-block[data-type]'));
-  const countBox = document.getElementById('selected-count');
-  const saveToken = document.getElementById('saveToken');
-  const adminTokenInput = document.getElementById('adminToken');
+/* --- Sample options (maps to flows.js names). Replace or extend as needed --- */
+const FLOW_OPTIONS = {
+  profile: [
+    "Problem involving someone under 18",
+    "Bullying, harassment or abuse",
+    "Violent, hateful or disturbing content",
+    "Adult content",
+    "Fake profile"
+  ],
+  page: [
+    "Problem involving someone under 18",
+    "Bullying, harassment or abuse",
+    "Violent, hateful or disturbing content",
+    "Adult content",
+    "Fake page"
+  ],
+  post: [
+    "Problem involving someone under 18",
+    "Bullying, harassment or abuse",
+    "Violent, hateful or disturbing content",
+    "Adult content"
+  ]
+};
 
-  // load token if saved (localStorage)
-  adminTokenInput.value = localStorage.getItem('adminToken') || '';
+const typeButtons = document.getElementById('typeButtons');
+const optionsList = document.getElementById('optionsList');
+const optionsTitle = document.getElementById('optionsTitle');
+const summary = document.getElementById('summary');
+const logbox = document.getElementById('logbox');
+const serverDot = document.getElementById('serverDot');
+const serverText = document.getElementById('serverText');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const adminTokenInput = document.getElementById('adminToken');
+const saveTokenBtn = document.getElementById('saveToken');
+const cookiesFile = document.getElementById('cookiesFile');
+const uploadCookiesBtn = document.getElementById('uploadCookies');
+const targetInput = document.getElementById('target');
+const flowSet = document.getElementById('flowSet');
 
-  saveToken.addEventListener('click', () => {
-    localStorage.setItem('adminToken', adminTokenInput.value.trim());
-    alert('Token saved locally (for this browser).');
+let currentType = 'profile';
+let cookiesContent = null;
+let eventSource = null;
+let selectedCount = 0;
+
+function setActiveType(t){
+  currentType = t;
+  Array.from(typeButtons.querySelectorAll('button')).forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.type===t);
   });
+  renderOptions();
+}
 
-  function setActiveLabel(value){
-    radioLabels.forEach(lbl=>{
-      const inp = lbl.querySelector('input');
-      if(inp.value === value) lbl.classList.add('active'); else lbl.classList.remove('active');
-    });
-  }
+function renderOptions(){
+  optionsList.innerHTML = '';
+  const opts = FLOW_OPTIONS[currentType] || [];
+  optionsTitle.textContent = (currentType.charAt(0).toUpperCase()+currentType.slice(1)) + ' Report Options';
+  selectedCount = 0;
+  opts.forEach((label, idx)=>{
+    const id = `opt_${currentType}_${idx}`;
+    const row = document.createElement('label');
+    row.className = 'opt';
+    row.innerHTML = `<input type="checkbox" id="${id}" value="${label}" /> <div style="flex:1">${label}</div>`;
+    optionsList.appendChild(row);
 
-  function showBlock(type){
-    blocks.forEach(b => {
-      if (b.dataset.type === type){
-        b.removeAttribute('hidden');
-        b.style.opacity = 1;
-        b.style.transform = 'translateY(0)';
-      } else {
-        b.setAttribute('hidden','');
-        b.style.opacity = 0;
-        b.style.transform = 'translateY(8px)';
-        // optional: clear other selections to avoid stale choices
-        b.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
-      }
-    });
-    updateCount();
-  }
-
-  function updateCount(){
-    const visible = blocks.find(b => !b.hasAttribute('hidden'));
-    if(!visible) { countBox.textContent = 'Selected: 0'; return; }
-    const checked = visible.querySelectorAll('input[type=checkbox]:checked').length;
-    countBox.textContent = `Selected: ${checked}`;
-  }
-
-  // radio change handlers
-  radios.forEach(r => r.addEventListener('change', () => {
-    if (r.checked) {
-      setActiveLabel(r.value);
-      showBlock(r.value);
-    }
-  }));
-  // clicking labels toggles input checked (UX)
-  radioLabels.forEach(lbl => {
-    lbl.addEventListener('click', () => {
-      const inp = lbl.querySelector('input');
-      inp.checked = true;
-      inp.dispatchEvent(new Event('change'));
+    row.querySelector('input').addEventListener('change', ()=> {
+      updateSummary();
     });
   });
+  updateSummary();
+}
 
-  // checkbox change
-  blocks.forEach(b => b.addEventListener('change', (e) => {
-    if (e.target && e.target.type === 'checkbox') updateCount();
-  }));
+function updateSummary(){
+  const checked = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
+  selectedCount = checked.length;
+  summary.textContent = `Selected: ${selectedCount}`;
+}
 
-  // initial
-  const initial = document.querySelector('input[name="reportType"]:checked');
-  setActiveLabel(initial.value);
-  showBlock(initial.value);
+typeButtons.addEventListener('click', (e)=>{
+  const b = e.target.closest('button[data-type]');
+  if(!b) return;
+  setActiveType(b.dataset.type);
+});
 
-  // Start button — gather data and POST to server
-  document.getElementById('startReport').addEventListener('click', async () => {
-    const type = document.querySelector('input[name="reportType"]:checked').value;
-    const target = document.getElementById('target').value.trim();
-    if(!target){ alert('Enter target URL / ID first'); return; }
+// Save admin token to localStorage
+saveTokenBtn.addEventListener('click', ()=>{
+  const t = adminTokenInput.value.trim();
+  localStorage.setItem('adminToken', t);
+  alert('Admin token saved locally.');
+});
 
-    // collect checked options for visible block
-    const visible = blocks.find(b => !b.hasAttribute('hidden'));
-    const opts = Array.from(visible.querySelectorAll('input[type=checkbox]:checked')).map(i => i.value);
+// read saved token on load
+window.addEventListener('load', ()=>{
+  const t = localStorage.getItem('adminToken');
+  if(t){ adminTokenInput.value = t; }
+  setActiveType(currentType);
 
-    // cookies file (optional)
-    const cookiesFileEl = document.getElementById('cookiesFile');
-    let cookiesText = null;
-    if (cookiesFileEl.files && cookiesFileEl.files.length){
-      cookiesText = await cookiesFileEl.files[0].text();
+  // Try attach to events automatically
+  startSSE();
+});
+
+// file upload preview
+uploadCookiesBtn.addEventListener('click', async ()=>{
+  const f = cookiesFile.files[0];
+  if(!f){ alert('Choose a cookies.txt file first'); return; }
+  const txt = await f.text();
+  cookiesContent = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  document.getElementById('cookiesStatus').textContent = `${cookiesContent.length} cookies loaded`;
+});
+
+// Start job
+startBtn.addEventListener('click', async ()=>{
+  const token = adminTokenInput.value.trim();
+  if(!token){ alert('Please enter admin token'); return; }
+  const target = targetInput.value.trim();
+  if(!target){ alert('Enter target URL / ID'); return; }
+
+  // collect selected options
+  const options = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
+
+  const payload = {
+    type: currentType,
+    target,
+    options,
+    cookies: cookiesContent || null
+  };
+
+  setServerState('starting');
+
+  try{
+    const res = await fetch('/report', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-admin-token': token
+      },
+      body: JSON.stringify(payload)
+    });
+    const j = await res.json();
+    if(!res.ok){
+      alert('Server error: ' + (j?.message || res.statusText));
+      setServerState('idle');
+      return;
     }
+    appendLog(`Job accepted: ${j.message || 'ok'}`);
+    setServerState('running');
+    // open SSE if not open
+    if(!eventSource) startSSE();
+  }catch(err){
+    appendLog('Start request failed: ' + err.message);
+    setServerState('idle');
+  }
+});
 
-    const payload = {
-      type,
-      target,
-      options: opts,
-      cookies: cookiesText // optional: server can parse
+// Stop job
+stopBtn.addEventListener('click', async ()=>{
+  const token = adminTokenInput.value.trim();
+  if(!token){ alert('Please enter admin token'); return; }
+  setServerState('stopping');
+  try{
+    // POST /stop (server needs to implement)
+    const res = await fetch('/stop', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-admin-token': token },
+      body: JSON.stringify({ reason:'manual' })
+    });
+    const j = await res.json();
+    appendLog(`Stop requested: ${j?.message || res.statusText}`);
+    setServerState('idle');
+  }catch(err){
+    appendLog('Stop request failed: ' + err.message);
+    setServerState('idle');
+  }
+});
+
+/* --- SSE (live logs) --- */
+function startSSE(){
+  if(typeof(EventSource) === 'undefined'){ appendLog('SSE not supported in this browser'); return; }
+  if(eventSource) return;
+  try{
+    eventSource = new EventSource('/events');
+    eventSource.onopen = ()=> appendLog('[SSE] connected');
+    eventSource.onerror = (e)=> {
+      appendLog('[SSE] connection error or closed');
+      // do not auto-reconnect forever; attempt manual reconnect after 5s
+      eventSource.close();
+      eventSource = null;
+      setTimeout(()=> startSSE(), 5000);
     };
-    const adminToken = localStorage.getItem('adminToken') || adminTokenInput.value.trim();
+    eventSource.addEventListener('log', (ev)=>{
+      appendLog(ev.data);
+    });
+    eventSource.addEventListener('status', (ev)=>{
+      const data = ev.data;
+      if(data === 'running') setServerState('running');
+      else if(data === 'idle') setServerState('idle');
+      appendLog('[status] ' + data);
+    });
+  }catch(err){
+    appendLog('SSE failed: ' + err.message);
+  }
+}
 
-    // show minimal UI feedback
-    document.getElementById('startReport').textContent = 'Starting...';
-    document.getElementById('startReport').disabled = true;
+function appendLog(text){
+  const line = document.createElement('div');
+  line.textContent = new Date().toLocaleTimeString() + '  ' + text;
+  logbox.appendChild(line);
+  logbox.scrollTop = logbox.scrollHeight;
+}
 
-    try {
-      const res = await fetch('/report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(adminToken ? {'x-admin-token': adminToken} : {})
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        alert('Server error: ' + text);
-      } else {
-        const j = await res.json();
-        alert('Started ✓ — server response: ' + (j.message || JSON.stringify(j)));
-      }
-    } catch (err){
-      alert('Request failed: ' + err.message);
-    } finally {
-      document.getElementById('startReport').textContent = 'Start';
-      document.getElementById('startReport').disabled = false;
-    }
+/* server state UI */
+function setServerState(s){
+  if(s === 'running'){
+    serverDot.classList.add('running');
+    serverText.textContent = 'Running';
+  } else if(s === 'starting'){
+    serverDot.classList.remove('running');
+    serverText.textContent = 'Starting…';
+  } else if(s === 'stopping'){
+    serverDot.classList.remove('running');
+    serverText.textContent = 'Stopping…';
+  } else {
+    serverDot.classList.remove('running');
+    serverText.textContent = 'Idle';
+  }
+}
+
+/* optional: allow flowSet being filled (if server provides /flows endpoint)
+fetch('/flows').then(r=>r.json()).then(list=>{
+  list.forEach(f=>{
+    const opt = document.createElement('option');
+    opt.value = f.name; opt.textContent = f.title || f.name;
+    flowSet.appendChild(opt);
   });
+}).catch(()=>{/* ignore */});
 
-  // upload cookies button (optional quick demo)
-  document.getElementById('uploadCookies').addEventListener('click', async () => {
-    const f = document.getElementById('cookiesFile').files[0];
-    if(!f){ alert('Choose cookies.txt first'); return; }
-    const txt = await f.text();
-    alert('Cookies loaded: ' + (txt.length>200 ? txt.slice(0,200)+'...' : txt) );
-  });
-
-})();
+/* helper: quick keyboard shortcuts */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
+    startBtn.click();
+  }
+});
 </script>
 </body>
 </html>
