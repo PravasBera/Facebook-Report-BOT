@@ -54,8 +54,11 @@ let flows = {};
 try { flows = require(FLOWS_PATH); } catch (e) { flows = { profileSets: [], pageSets: [], postSets: [] }; console.warn('flows.js missing or invalid'); }
 
 // Admin token (set env ADMIN_TOKEN for production)
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'change_me_now';
-
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+if (!ADMIN_TOKEN) {
+  console.error('FATAL: ADMIN_TOKEN not set in environment. Set ADMIN_TOKEN before starting.');
+  // optionally: process.exit(1);
+}
 // --- multer safe storage ---
 const sanitize = (name) => String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
 const storage = multer.diskStorage({
