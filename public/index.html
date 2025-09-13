@@ -15,66 +15,76 @@
       --soft:#eef4ff;
       --radius:14px;
       --header-title-grad: linear-gradient(90deg,#ff5f5f 0%, #ff3db8 50%, #7a5bff 100%);
+      --container-max:980px;
     }
     *{box-sizing:border-box}
-    body {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: var(--page-bg);
-  margin: 0;
-  padding: 18px;
-  color: #0f1724;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+    html,body{height:100%}
+    body{
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--page-bg);
+      margin:0; padding:24px;
+      color:#0f1724;
+      display:flex; flex-direction:column; min-height:100vh;
+      align-items:center; /* center everything horizontally */
+    }
 
-  align-items: center;      /* 👈 সব card center হবে horizontally */
-}
+    /* page container to avoid edge overflow on small screens */
+    .page {
+      width:100%;
+      max-width:var(--container-max);
+    }
 
-.top-row {
-  display: flex;
-  gap: 18px;
-  align-items: stretch;     /* 👈 height match করবে */
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-  justify-content: center;  /* 👈 পুরো row center হবে */
-}
+    /* TOP ROW (header + report card layout) */
+    .top-row {
+      display:flex;
+      gap:20px;
+      align-items:flex-start;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
 
-    /* Header: dark big title that stays single-line */
+    /* Header: dark card with big title */
     .header-wrap {
       background: #071025;
       border-radius:18px;
-      padding:22px 28px;
+      padding:26px 28px;
       color:#dbeafe;
-      box-shadow: 0 14px 40px rgba(2,6,23,0.6);
+      box-shadow: 0 14px 40px rgba(2,6,23,0.45);
       display:flex;
       flex-direction:column;
       align-items:center;
       text-align:center;
-      flex: 1 1 45%;
-      min-width:500px;
+      flex: 1 1 60%;
+      min-width:260px;
+      max-width:calc(60% - 10px);
     }
-    /* clamp ensures the title shrinks on small screens to stay on one line */
+
+    /* Make sure header content never overflows the card horizontally */
     .header-title {
-      font-weight:800;
-      margin:0 0 8px 0;
+      display:block;
+      /* responsive sizing: clamp prevents too-large or too-small */
+      font-size: clamp(20px, 4.5vw, 36px);
+      font-weight:900;
       line-height:1;
-      white-space:nowrap;          /* force single line */
-      overflow:visible;
-      font-size: clamp(20px, 5.6vw, 44px); /* responsive */
+      margin:0 0 10px 0;
       background: var(--header-title-grad);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      color: transparent;
-      text-shadow: 0 6px 20px rgba(0,0,0,0.45);
-      letter-spacing: -0.01em;
+      text-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      white-space: nowrap;          /* keep it on single line */
+      overflow: visible;           /* don't hide the text */
+      text-overflow: clip;
+      padding:0 6px;
     }
+
     .header-meta {
       font-size:14px;
       color: #9fb4d3;
       margin-top:6px;
       display:flex;
-      gap:12px;
+      gap:10px;
       align-items:center;
       flex-wrap:wrap;
       justify-content:center;
@@ -88,35 +98,55 @@
       font-size:15px;
     }
 
-    /* Card style */
+    /* Card style used elsewhere */
     .card {
       background:var(--card); border-radius:var(--radius);
       padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
     }
 
-    /* Report card (side-by-side on wide screens) */
-    .report-card { padding:18px; border-radius:16px; display:block; flex: 1 1 40%; min-width:300px; }
+    /* Report card sits next to header on wide screens */
+    .report-card {
+      padding:18px; border-radius:16px; display:block;
+      flex:1 1 36%;
+      min-width:300px;
+      max-width:calc(40% - 10px);
+    }
+
+    /* small-screen behaviour — stack and make full width */
+    @media(max-width:900px){
+      .header-wrap, .report-card {
+        max-width:100%;
+        flex-basis:100%;
+      }
+      .header-title {
+        font-size: clamp(20px, 7vw, 34px);
+        white-space: normal; /* allow wrapping on tiny screens so nothing cuts off */
+      }
+    }
+
+    /* rest of UI elements (kept like previous) */
     .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
 
-    /* Radio layout: first two in row, third on its own (works responsive) */
     .radio-row {
       display:grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(1, 1fr);
       gap:12px;
       margin-top:6px;
-      align-items:center;
     }
+    @media(min-width:560px){
+      .radio-row { grid-template-columns: repeat(1, 1fr); } /* keep vertical for mobile-look */
+    }
+
     .radio-pill {
       display:flex; align-items:center; gap:10px;
       padding:12px 18px; border-radius:999px; background:var(--soft);
       border:1px solid transparent; font-weight:700; color:#0b1220;
-      justify-content:center; min-height:48px;
+      justify-content:center;
+      min-height:48px;
     }
-    .radio-pill:nth-child(3){ grid-column: 1 / -1; } /* third item spans full width */
     .radio-pill input{ transform:scale(1.05); margin-right:8px; }
 
-    /* Admin token */
     .token-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
     .token-row input[type=text] {
       flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
@@ -124,11 +154,12 @@
     }
     .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
     .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; border-radius:12px; }
-    .btn-primary { background:var(--blue); color:white; }
+    .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
+    .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
+    .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
 
-    /* Target input & options */
-    .target { margin-top:14px; }
     .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
+
     .options-list { margin-top:12px; display:grid; gap:12px; }
     .option-item {
       display:flex; gap:12px; align-items:center; padding:14px;
@@ -137,29 +168,17 @@
     }
     .option-item input{ width:20px; height:20px; transform:scale(1.05); }
 
-    /* Controls */
-    .controls { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
-    .controls .file-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
-    .controls .file-row input[type=file]{ flex:0 0 auto; }
-    .controls .buttons { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
-    .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
-    .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
-    .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
-
-    /* Live logs */
-    .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); }
+    .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); margin-top:12px; }
     .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; color:#f1d4ff; }
-    .log-title .autoscroll { color:#d7b1ff; display:flex; gap:8px; align-items:center; font-weight:700; }
-
     pre.log-area{
       background:#000;
       color:#66ff99;
       padding:22px;
       border-radius:12px;
-      height:420px;
+      height:360px;
       overflow:auto;
       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-      font-size:14px;
+      font-size:15px;
       border: 1px solid rgba(255,255,255,0.04);
       box-shadow: inset 0 6px 20px rgba(0,0,0,0.6);
       white-space:pre-wrap;
@@ -167,101 +186,85 @@
 
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
 
-    @media(max-width:900px){
-      .top-row { flex-direction:column; }
-      .header-wrap, .report-card { flex: none; width: auto; }
-      .radio-row { grid-template-columns: 1fr; }
-      .radio-pill:nth-child(3){ grid-column:auto; } /* mobile: keep stacking */
-      .header-wrap { padding:18px; }
-    }
-
-    @media(min-width:980px){
-      body { padding:28px; }
-      .header-wrap { padding:28px 36px; border-radius:20px; }
-      pre.log-area{ height:520px; }
-    }
   </style>
 </head>
 <body>
-
-  <div class="top-row">
-    <!-- Header -->
-    <div class="header-wrap" role="banner" aria-label="Application header">
-      <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
-      <div class="header-meta" role="list" aria-hidden="false">
-        <div role="listitem">👤 Author: <strong>PRAVAS BERA</strong></div>
-        <div role="separator">|</div>
-        <div role="listitem">🌍 Version: <strong>Premium</strong></div>
-        <div role="separator">|</div>
-        <div role="listitem">🇮🇳 Country: <strong>INDIA</strong></div>
+  <div class="page">
+    <div class="top-row">
+      <div class="header-wrap" role="banner" aria-label="Application header">
+        <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
+        <div class="header-meta" role="list">
+          <div role="listitem">👤 Author: <strong>PRAVAS BERA</strong></div>
+          <div role="separator">|</div>
+          <div role="listitem">🌍 Version: <strong>Premium</strong></div>
+          <div role="separator">|</div>
+          <div role="listitem">🇮🇳 Country: <strong>INDIA</strong></div>
+        </div>
+        <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
       </div>
-      <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
+
+      <div class="card report-card" role="region" aria-label="Choose report type">
+        <div>
+          <div class="section-title">Choose Report Type</div>
+          <div class="section-sub">Select the object you want to report — options will change accordingly.</div>
+        </div>
+
+        <div class="radio-row" role="radiogroup" aria-label="Report type">
+          <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
+          <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
+          <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
+        </div>
+
+        <div class="target" style="margin-top:14px;">
+          <label style="font-weight:800; display:block; margin-bottom:8px;">Target URL / ID</label>
+          <input id="target" type="text" placeholder="https://facebook.com/..." aria-label="Target URL or ID" />
+        </div>
+
+        <div id="optionsBox" class="options-list" aria-live="polite"></div>
+      </div>
     </div>
 
-    <!-- Report card -->
-    <div class="card report-card" role="region" aria-label="Choose report type">
-      <div>
-        <div class="section-title">Choose Report Type</div>
-        <div class="section-sub">Select the object you want to report — options will change accordingly.</div>
+    <div class="card" aria-labelledby="token-label">
+      <label id="token-label" style="font-weight:800; display:block; margin-bottom:8px;">Enter Admin Token here (x-admin-token)</label>
+      <div class="token-row">
+        <input id="adminToken" type="text" placeholder="x-admin-token" aria-label="Admin token" />
+        <button id="saveToken" class="btn-ghost btn">Save</button>
       </div>
-
-      <div class="radio-row" role="radiogroup" aria-label="Report type">
-        <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
-        <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
-        <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
-      </div>
-
-      <div class="target" style="margin-top:14px;">
-        <label style="font-weight:800; display:block; margin-bottom:8px;">Target URL / ID</label>
-        <input id="target" type="text" placeholder="https://facebook.com/..." aria-label="Target URL or ID" />
-      </div>
-
-      <div id="optionsBox" class="options-list" aria-live="polite"></div>
     </div>
+
+    <div class="card" role="region" aria-label="Cookies and controls">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
+        <div style="color:var(--muted); font-size:13px;">Each line in cookies.txt = one cookie string</div>
+      </div>
+
+      <div class="controls">
+        <div class="file-row">
+          <input id="cookiesFile" type="file" accept=".txt" aria-label="Cookies file" />
+        </div>
+
+        <div class="buttons">
+          <button id="uploadCookies" class="btn-upload btn">Upload Cookies</button>
+          <button id="startBtn" class="btn-start btn">Start</button>
+          <button id="stopBtn" class="btn-stop btn">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="logs-card" role="region" aria-label="Live logs">
+      <div class="log-title">
+        <div>Live Log</div>
+        <div class="autoscroll"><input id="autoScroll" type="checkbox" checked /> <label for="autoScroll">Auto-scroll</label></div>
+      </div>
+
+      <pre id="logArea" class="log-area" aria-live="polite">✅ Connected</pre>
+    </div>
+
+    <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
   </div>
-
-  <!-- Admin token -->
-  <div class="card" aria-labelledby="token-label">
-    <label id="token-label" style="font-weight:800; display:block; margin-bottom:8px;">Enter Admin Token here (x-admin-token)</label>
-    <div class="token-row">
-      <input id="adminToken" type="text" placeholder="x-admin-token" aria-label="Admin token" />
-      <button id="saveToken" class="btn-ghost btn">Save</button>
-    </div>
-  </div>
-
-  <!-- Cookies & controls -->
-  <div class="card" role="region" aria-label="Cookies and controls">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
-      <div style="color:var(--muted); font-size:13px;">Each line in cookies.txt = one cookie string</div>
-    </div>
-
-    <div class="controls">
-      <div class="file-row">
-        <input id="cookiesFile" type="file" accept=".txt" aria-label="Cookies file" />
-      </div>
-
-      <div class="buttons">
-        <button id="uploadCookies" class="btn-upload btn">Upload Cookies</button>
-        <button id="startBtn" class="btn-start btn">Start</button>
-        <button id="stopBtn" class="btn-stop btn">Stop</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Live logs -->
-  <div class="logs-card" role="region" aria-label="Live logs">
-    <div class="log-title">
-      <div>Live Log</div>
-      <div class="autoscroll"><input id="autoScroll" type="checkbox" checked /> <label for="autoScroll">Auto-scroll</label></div>
-    </div>
-
-    <pre id="logArea" class="log-area" aria-live="polite">✅</pre>
-  </div>
-
-  <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
+  // Option sets
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
@@ -299,7 +302,7 @@
   document.getElementById('cookiesFile').onchange=async(e)=>{
     const f=e.target.files[0]; if(!f)return;
     const text=await f.text(); cookiesText=text.trim();
-    alert('cookies loaded: '+(cookiesText.split('\n').length)+' lines');
+    alert('cookies loaded: '+(cookiesText.split('\\n').length)+' lines');
   };
 
   function log(msg){
@@ -374,8 +377,7 @@
     currentJobId=null;
   }
 
-  // initial message
-  log('Welcome KING 👑— Your Brahmastra is ready.');
+  log('Welcome KING 👑 — Your Brahmastra is Ready');
 </script>
 </body>
 </html>
