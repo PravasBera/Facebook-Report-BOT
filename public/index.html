@@ -52,24 +52,18 @@
     }
     /* use clamp so font scales smoothly across devices */
     .header-title {
-      font-size: clamp(22px, 5.6vw, 44px); /* mobile -> desktop scaling */
-      font-weight:800;
-      letter-spacing: -0.02em;
-      margin:0 0 8px 0;
-      line-height:1.05;
-      display:block;
-      /* gradient text */
-      background: var(--header-title-grad);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-      text-shadow: 0 6px 22px rgba(0,0,0,0.4);
-      padding: 6px 10px;
-      /* make sure long titles wrap nicely centered */
-      word-break: normal;
-      hyphens: auto;
-    }
+  font-size:25px;
+  font-weight:500;
+  letter-spacing: -0.01em;
+  margin:0 0 8px 0;
+  background: var(--header-title-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: 0 6px 24px rgba(0,0,0,0.45);
+  white-space: nowrap;   /* 👈 এটাই ফাইনাল ফিক্স */
+}
     .header-subline {
       display:flex;
       gap:10px;
@@ -167,14 +161,14 @@
   <div class="top-row">
     <div class="header-wrap" role="banner" aria-label="Application header">
       <!-- Title: will scale responsively and not break awkwardly -->
-      <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
+      <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
 
       <!-- meta line kept compact and centered -->
       <div class="header-subline" aria-hidden="false">
         <span>👤 Author: <b>PRAVAS BERA</b></span>
-        <span>•</span>
+        <span>|</span>
         <span>🌍 Version: <b>Premium</b></span>
-        <span>•</span>
+        <span>|</span>
         <span>🇮🇳 Country: <b>INDIA</b></span>
       </div>
 
@@ -192,7 +186,7 @@
         <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
         <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
         <!-- make Post a full-width row on larger screens -->
-        <label class="radio-pill span-two"><input type="radio" name="rtype" value="post"> Post</label>
+        <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
       </div>
 
       <div class="target" style="margin-top:14px;">
@@ -359,7 +353,7 @@
   }
 
   // initial message
-  log('Welcome — log pane ready.');
+  log('Welcome KING 👑 — Your Brahmastra is ready.');
 </script>
 </body>
 </html>
