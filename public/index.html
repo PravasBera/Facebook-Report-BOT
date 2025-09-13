@@ -51,31 +51,23 @@
       /* ensure header doesn't push other content too far on narrow screens */
       max-width: 100%;
     }
-    /* use clamp so font scales smoothly across devices */
-    /* REPLACE your existing .header-title with this block */
-.header-title {
-  /* responsive font: shrinks on small screens, caps at 48px on large */
-  font-size: clamp(18px, 6.2vw, 48px);
-  font-weight: 800;
+    .header-title {
+  font-size: clamp(14px, 5vw, 32px); /* ছোট ডিভাইসে ছোট হবে */
+  font-weight: 900;
   letter-spacing: -0.01em;
   margin: 0 0 8px 0;
 
-  /* keep gradient text effect */
   background: var(--header-title-grad);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 
-  /* KEEP IT IN ONE LINE */
-  white-space: nowrap;        /* do not wrap */
-  overflow: hidden;          /* hide overflow just in case */
-  text-overflow: clip;       /* don't add ellipsis — it will shrink instead */
-  display: inline-block;     /* allow width calculation on inline element */
-
-  /* small visual tuning */
-  line-height: 1;
+  line-height: 1.2;
   text-align: center;
+
+  white-space: normal;    /* এখন ব্রেক করতে পারবে */
+  word-break: break-word; /* কেটে না গিয়ে সাইজ কমবে */
 }
     .header-subline {
       display:flex;
