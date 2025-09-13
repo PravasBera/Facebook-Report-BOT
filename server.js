@@ -12,6 +12,18 @@ const { EventEmitter } = require('events');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.post('/report', express.json({ limit: '2mb' }), (req, res) => {
+  const token = req.headers['x-admin-token'] || req.body.adminToken;
+  if (!token || token !== process.env.ADMIN_TOKEN) return res.status(401).json({ ok:false, message:'Unauthorized' });
+
+  const { type, target, options, cookies } = req.body;
+  // TODO: validate inputs, push to job queue, start puppeteer job, etc.
+  console.log('New job', { type, target, options, cookiesSample: cookies ? cookies.slice(0,120) : null });
+
+  // respond quickly
+  res.json({ ok:true, message:'Job accepted' });
+});
+
 const ROOT = path.resolve(__dirname);
 const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const PUBLIC_DIR = path.join(ROOT, 'public');
