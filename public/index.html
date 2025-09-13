@@ -34,7 +34,7 @@
       flex-wrap:wrap;
     }
 
-    /* Header: big dark gradient title */
+    /* Header: improved responsive title */
     .header-wrap {
       background: #071025;
       border-radius:18px;
@@ -47,36 +47,46 @@
       text-align:center;
       flex: 1 1 60%;
       min-width:260px;
+      /* ensure header doesn't push other content too far on narrow screens */
+      max-width: 100%;
     }
+    /* use clamp so font scales smoothly across devices */
     .header-title {
-      font-size:25px;
-      font-weight:500;
-      letter-spacing: -0.01em;
+      font-size: clamp(22px, 5.6vw, 44px); /* mobile -> desktop scaling */
+      font-weight:800;
+      letter-spacing: -0.02em;
       margin:0 0 8px 0;
+      line-height:1.05;
+      display:block;
+      /* gradient text */
       background: var(--header-title-grad);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
       color: transparent;
-      text-shadow: 0 6px 24px rgba(0,0,0,0.45);
+      text-shadow: 0 6px 22px rgba(0,0,0,0.4);
+      padding: 6px 10px;
+      /* make sure long titles wrap nicely centered */
+      word-break: normal;
+      hyphens: auto;
     }
-    .header-meta {
-      font-size:15px;
-      color: #9fb4d3;
-      margin-top:6px;
+    .header-subline {
       display:flex;
-      gap:12px;
+      gap:10px;
       align-items:center;
-      flex-wrap:wrap;
       justify-content:center;
+      flex-wrap:wrap;
+      margin-top:6px;
+      color:#9fb4d3;
+      font-size:14px;
     }
-    .header-meta strong { color:#fff; font-weight:800; }
+    .header-subline b { color:#fff; font-weight:800; margin:0 6px; }
     .team-badge {
       margin-top:10px;
       color:#4fb0ff;
       font-weight:900;
       letter-spacing:0.6px;
-      font-size:16px;
+      font-size:15px;
     }
 
     /* Card style */
@@ -85,7 +95,7 @@
       padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
     }
 
-    /* Choose report type card should share top-row */
+    /* Report card (same as before) */
     .report-card {
       padding:18px; border-radius:16px; display:block;
       flex: 1 1 40%;
@@ -94,7 +104,7 @@
     .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
 
-    /* RADIO layout: grid so 2 items first row, the 3rd spans full width */
+    /* grid radio to keep two on first row and one on next row */
     .radio-row {
       display:grid;
       grid-template-columns: repeat(2, 1fr);
@@ -109,74 +119,40 @@
       justify-content:center;
       min-height:48px;
     }
-    /* make the "Post" pill span two columns so it sits on its own line */
     .radio-pill.span-two { grid-column: 1 / -1; justify-content:flex-start; padding-left:22px; }
-
     .radio-pill input{ transform:scale(1.05); margin-right:8px; }
 
-    /* admin token */
+    /* token */
     .token-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
-    .token-row input[type=text] {
-      flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
-      background:#fbfdff; font-weight:600; color:#0b1220;
-    }
+    .token-row input[type=text] { flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb; background:#fbfdff; font-weight:600; color:#0b1220; }
+
     .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
     .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; border-radius:12px; }
-    .btn-primary { background:var(--blue); color:white; }
-
-    /* Target input & options */
-    .target { margin-top:14px; }
-    .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
-    .options-list { margin-top:12px; display:grid; gap:12px; }
-    .option-item {
-      display:flex; gap:12px; align-items:center; padding:14px;
-      border-radius:12px; border:1px solid #eef3fb; background:white;
-      font-weight:700; font-size:15px;
-    }
-    .option-item input{ width:20px; height:20px; transform:scale(1.05); }
-
-    /* Controls */
-    .controls { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
-    .controls .file-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
-    .controls .file-row input[type=file]{ flex:0 0 auto; }
-    .controls .buttons { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
     .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
     .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
     .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
 
-    /* BIG Live logs */
+    .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
+    .options-list { margin-top:12px; display:grid; gap:12px; }
+    .option-item { display:flex; gap:12px; align-items:center; padding:14px; border-radius:12px; border:1px solid #eef3fb; background:white; font-weight:700; font-size:15px; }
+
+    /* logs */
     .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); }
     .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; color:#f1d4ff; }
     .log-title .autoscroll { color:#d7b1ff; display:flex; gap:8px; align-items:center; font-weight:700; }
-
-    pre.log-area{
-      background:#000;
-      color:#66ff99;
-      padding:22px;
-      border-radius:12px;
-      height:520px;
-      overflow:auto;
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-      font-size:15px;
-      border: 1px solid rgba(255,255,255,0.04);
-      box-shadow: inset 0 6px 20px rgba(0,0,0,0.6);
-      white-space:pre-wrap;
-    }
+    pre.log-area{ background:#000; color:#66ff99; padding:22px; border-radius:12px; height:520px; overflow:auto; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:15px; border: 1px solid rgba(255,255,255,0.04); box-shadow: inset 0 6px 20px rgba(0,0,0,0.6); white-space:pre-wrap; }
 
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
-
     .small { color:var(--muted); font-size:13px; }
 
-    /* responsive: stack on narrow screens */
+    /* responsiveness tweaks */
     @media(max-width:900px){
       .top-row { flex-direction:column; }
       .header-wrap, .report-card { flex: none; width: auto; }
-      .header-title { font-size:34px; }
-      /* On small screens, make radio pills full width stacking nicely */
+      .header-title { font-size: clamp(20px, 8vw, 34px); }
       .radio-row { grid-template-columns: 1fr; }
-      .radio-pill.span-two { grid-column: auto; }
+      .radio-pill.span-two { grid-column:auto; }
     }
-
     @media(min-width:980px){
       body { padding:32px; }
       .header-wrap { padding:36px; border-radius:20px; }
@@ -190,17 +166,22 @@
   <!-- TOP ROW: header + report card (side-by-side on wide screens) -->
   <div class="top-row">
     <div class="header-wrap" role="banner" aria-label="Application header">
-      <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
-      <div class="header-meta" role="list">
-        <div role="listitem">👤 Author: <strong>PRAVAS BERA</strong></div>
-        <div role="separator">|</div>
-        <div role="listitem">🌍 Version: <strong>Premium</strong></div>
-        <div role="separator">|</div>
-        <div role="listitem">🇮🇳 Country: <strong>INDIA</strong></div>
+      <!-- Title: will scale responsively and not break awkwardly -->
+      <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
+
+      <!-- meta line kept compact and centered -->
+      <div class="header-subline" aria-hidden="false">
+        <span>👤 Author: <b>PRAVAS BERA</b></span>
+        <span>•</span>
+        <span>🌍 Version: <b>Premium</b></span>
+        <span>•</span>
+        <span>🇮🇳 Country: <b>INDIA</b></span>
       </div>
+
       <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
     </div>
 
+    <!-- Report card -->
     <div class="card report-card" role="region" aria-label="Choose report type">
       <div>
         <div class="section-title">Choose Report Type</div>
@@ -210,7 +191,8 @@
       <div class="radio-row" role="radiogroup" aria-label="Report type">
         <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
         <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
-        <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
+        <!-- make Post a full-width row on larger screens -->
+        <label class="radio-pill span-two"><input type="radio" name="rtype" value="post"> Post</label>
       </div>
 
       <div class="target" style="margin-top:14px;">
@@ -231,7 +213,7 @@
     </div>
   </div>
 
-  <!-- Cookies and controls -->
+  <!-- Cookies & controls -->
   <div class="card" role="region" aria-label="Cookies and controls">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
@@ -251,20 +233,19 @@
     </div>
   </div>
 
-  <!-- BIG Live logs -->
+  <!-- Live logs -->
   <div class="logs-card" role="region" aria-label="Live logs">
     <div class="log-title">
       <div>Live Log</div>
       <div class="autoscroll"><input id="autoScroll" type="checkbox" checked /> <label for="autoScroll">Auto-scroll</label></div>
     </div>
 
-    <pre id="logArea" class="log-area" aria-live="polite">✅</pre>
+    <pre id="logArea" class="log-area" aria-live="polite">No logs yet.</pre>
   </div>
 
   <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
-  // Option sets
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
@@ -294,7 +275,6 @@
   document.querySelectorAll('input[name=rtype]').forEach(el=>{
     el.onchange=()=>renderOptions(document.querySelector('input[name=rtype]:checked').value);
   });
-  // initial
   renderOptions('profile');
 
   saveToken.onclick=()=>{ localStorage.setItem('adminToken',adminInput.value.trim()); alert('Saved token'); };
@@ -379,7 +359,7 @@
   }
 
   // initial message
-  log('Welcome KING 👑 — Your Brahmastra is Ready.');
+  log('Welcome — log pane ready.');
 </script>
 </body>
 </html>
