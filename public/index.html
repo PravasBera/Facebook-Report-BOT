@@ -4,144 +4,184 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Facebook Automation Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    /* --- basic layout --- */
     :root{
-      --accent:#1869ff;
+      --blue:#1869ff;
       --muted:#6b7280;
-      --card-bg:#ffffff;
-      --page-bg:#f4f7fb;
-      --danger:#ff4d4f;
-      --success:#16a34a;
+      --card:#ffffff;
+      --bg:#f4f7fb;
+      --accent:#ff4d4f;
+      --soft:#eef4ff;
+      --radius:14px;
     }
-    html,body{height:100%}
-    body {
-      font-family: Inter, Arial, sans-serif;
-      background:var(--page-bg);
-      margin:0; padding:22px;
-      color:#111; display:flex; flex-direction:column; min-height:100vh;
+    *{box-sizing:border-box}
+    body{
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      margin:0; padding:18px;
+      color:#0f1724;
+      display:flex; flex-direction:column; min-height:100vh;
     }
 
-    /* --- header (made larger & full-width, removed right badge) --- */
-    header {
-      background: linear-gradient(90deg,#1565ff 0%, #2ea6ff 100%);
-      color:white;
-      border-radius:14px;
-      padding:18px 22px;
-      display:flex;
-      gap:18px;
-      align-items:center;
-      justify-content:space-between;
-      box-shadow: 0 8px 26px rgba(20,30,60,0.12);
+    /* Header big */
+    .header {
+      background: linear-gradient(90deg,#1e63ff 0%, #2ea0ff 100%);
+      color:white; border-radius:16px; padding:20px;
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      box-shadow:0 10px 30px rgba(30,80,200,0.12);
       margin-bottom:18px;
     }
-    header .title { font-size:22px; font-weight:800; display:flex;align-items:center; gap:10px; }
-    header .meta { text-align:right; font-size:13px; opacity:0.95; }
-    header .meta b{ font-weight:700; }
+    .hdr-left { display:flex; gap:14px; align-items:flex-start; }
+    .logo {
+      font-size:34px; font-weight:800; letter-spacing: -0.02em;
+    }
+    .meta {
+      font-size:13px; opacity:0.95; margin-top:4px;
+    }
+    .meta strong{ color:#ffd; font-weight:700; }
+    /* removed admin bubble on right */
 
-    /* --- cards --- */
+    /* Card */
     .card {
-      background:var(--card-bg);
-      border-radius:14px;
-      padding:18px;
-      box-shadow:0 8px 18px rgba(18,24,40,0.06);
-      margin-bottom:16px;
+      background:var(--card); border-radius:var(--radius);
+      padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
     }
 
-    /* --- form controls --- */
-    label{ display:block; font-weight:600; margin-bottom:8px; color:#0b1220; }
-    input[type=text], textarea { width:100%; padding:14px 12px; border-radius:10px; border:1px solid #e6edf7; box-sizing:border-box; font-size:14px; }
-    .radio-row { display:flex; gap:12px; margin:8px 0 14px 0; }
-    .radio-row label{ background:#fbfdff; padding:8px 12px; border-radius:10px; border:1px solid #eef6ff; cursor:pointer; display:flex; align-items:center; gap:8px; font-weight:600; }
+    /* admin token */
+    .token-row { display:flex; gap:10px; align-items:center; }
+    .token-row input[type=text] {
+      flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
+      background:#fbfdff; font-weight:600; color:#0b1220;
+    }
+    .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
+    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; }
+    .btn-primary { background:var(--blue); color:white; }
 
-    /* --- options list --- */
-    .options-list { display:block; margin-top:6px; }
-    .option-item { display:flex; gap:12px; align-items:center; padding:14px; border-radius:12px; border:1px solid #eef2f7; margin-bottom:12px; background:#fff; font-size:15px; }
+    /* Choose report type big card */
+    .report-card { padding:18px; border-radius:16px; display:block; }
+    .section-title { font-size:18px; font-weight:800; margin-bottom:10px; }
+    .radio-row { display:flex; gap:12px; }
+    .radio-pill {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 18px; border-radius:999px; background:var(--soft);
+      border:1px solid transparent; font-weight:700; color:#0b1220;
+    }
+    .radio-pill input{ transform:scale(1.1); margin-right:6px; }
 
-    /* --- bigger buttons (Start/Stop) --- */
-    .controls { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
-    .btn { padding:12px 18px; border-radius:12px; cursor:pointer; border:none; font-weight:800; font-size:15px; }
-    .btn-primary { background:var(--accent); color:white; min-width:120px; box-shadow:0 6px 14px rgba(24,105,255,0.22);}
-    .btn-danger { background:var(--danger); color:white; min-width:120px; }
-    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--accent); padding:12px 16px; border-radius:12px; font-weight:800; }
-    .btn-block { flex:1 1 140px; }
+    /* Target input */
+    .target { margin-top:12px; }
+    .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
 
-    /* --- Choose Report Type card styling (separate larger card) --- */
-    .big-card { border-radius:14px; padding:18px; margin-bottom:14px; background:linear-gradient(180deg,#ffffff,#fbfcff); box-shadow:0 8px 26px rgba(16,24,48,0.06); }
+    /* options list */
+    .options-list { margin-top:12px; display:grid; gap:12px; }
+    .option-item {
+      display:flex; gap:12px; align-items:center; padding:14px;
+      border-radius:12px; border:1px solid #eef3fb; background:white;
+      font-weight:700;
+    }
+    .option-item input{ width:20px; height:20px; transform:scale(1.05); }
 
-    /* --- Live logs bigger --- */
-    .live-title { font-size:18px; font-weight:800; margin-bottom:10px; }
-    pre { background:#071022; color:#8ef7be; padding:14px; border-radius:10px; max-height:620px; overflow:auto; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
-    .small { font-size:13px; color:var(--muted); }
+    /* Controls big */
+    .controls { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
+    .controls .file-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .controls .file-row input[type=file]{ flex:0 0 auto; }
+    .controls .buttons { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+    .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
+    .btn-start { background:var(--blue); color:#fff; padding:14px 28px; border-radius:14px; font-size:16px; box-shadow:0 10px 30px rgba(24,105,255,0.14); }
+    .btn-stop { background:var(--accent); color:#fff; padding:14px 28px; border-radius:14px; font-size:16px; box-shadow:0 10px 20px rgba(255,77,79,0.12); }
 
-    /* --- footer --- */
-    footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:10px 0; }
-    @media (min-width:900px){
-      body{padding:36px}
-      header .title{font-size:26px}
-      .card{padding:22px}
+    /* live logs big */
+    .logs-card { padding:18px; border-radius:16px; }
+    .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; }
+    pre{ background:#071421; color:#86ffb0; padding:16px; border-radius:12px; max-height:300px; overflow:auto; font-family:monospace; font-size:14px; }
+
+    /* footer */
+    footer { margin-top:auto; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
+
+    /* responsive tweaks */
+    @media(min-width:900px){
+      body { padding:32px; }
+      .header { padding:28px; }
+      .logo { font-size:38px; }
+      .card { padding:22px; }
+      pre{ max-height:420px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- BIG HEADER (removed small badge on right; header enlarged) -->
-  <header>
-    <div>
-      <div class="title">⚡Facebook Automation Tool⚡</div>
-      <div style="margin-top:8px; font-size:13px; opacity:0.95;">
-        👤 Author: <b>PRAVAS BERA</b> &nbsp; | &nbsp; 🌍 Version: <b>Premium</b> &nbsp; | &nbsp; 🇮🇳 Country: <b>INDIA</b>
+  <div class="header">
+    <div class="hdr-left">
+      <div>
+        <div class="logo">⚡ Facebook Automation Tool ⚡</div>
+        <div class="meta">
+          Author: <strong>PRAVAS BERA ☠️</strong> &nbsp; | &nbsp; Version: <strong>Premium</strong> &nbsp; | &nbsp; Country: <strong>INDIA</strong><br/>
+          🔥 <strong>INDIAN DANGER OF BULLET TEAM</strong> 🔥
+        </div>
       </div>
-      <div style="margin-top:6px; color:#ffbb4a; font-weight:700;">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
     </div>
-  </header>
 
-  <!-- Admin token card -->
+    <!-- Right side intentionally removed per request (no admin bubble) -->
+  </div>
+
+  <!-- Admin token -->
   <div class="card">
-    <label>Enter Admin Token here (x-admin-token)</label>
-    <div style="display:flex; gap:10px; align-items:center;">
+    <label style="font-weight:800; display:block; margin-bottom:8px;">Enter Admin Token here (x-admin-token)</label>
+    <div class="token-row">
       <input id="adminToken" type="text" placeholder="x-admin-token" />
       <button id="saveToken" class="btn btn-ghost">Save</button>
     </div>
   </div>
 
-  <!-- CHOOSE REPORT TYPE as a separate BIG card -->
-  <div class="big-card">
-    <label style="font-size:18px; font-weight:800; margin-bottom:8px;">Choose Report Type</label>
-    <div class="radio-row" style="margin-top:12px;">
-      <label><input type="radio" name="rtype" value="profile" checked> Profile</label>
-      <label><input type="rado" name="rtype" value="page"> Page</label>
-      <label><input type="radio" name="rtype" value="post"> Post</label>
+  <!-- Choose Report Type card -->
+  <div class="card report-card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div class="section-title">Choose Report Type</div>
+        <div class="small">Select the object you want to report — options will change accordingly.</div>
+      </div>
     </div>
 
-    <div style="margin-top:14px;">
-      <label>Target URL / ID</label>
+    <div style="margin-top:12px;" class="radio-row">
+      <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
+      <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
+      <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
+    </div>
+
+    <div class="target" style="margin-top:14px;">
+      <label style="font-weight:800; display:block; margin-bottom:8px;">Target URL / ID</label>
       <input id="target" type="text" placeholder="https://facebook.com/..." />
     </div>
 
-    <div id="optionsBox" class="options-list" style="margin-top:14px;"></div>
+    <div id="optionsBox" class="options-list"></div>
   </div>
 
-  <!-- Cookies / Buttons card (buttons made bigger) -->
-  <div class="card">
-    <label style="font-weight:800;">Cookies & Controls</label>
-    <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
-      <input id="cookiesFile" type="file" accept=".txt" />
-      <div class="small">Each line in cookies.txt = one cookie string</div>
-    </div>
-
-    <div class="controls" style="margin-top:14px;">
-      <button id="uploadCookies" class="btn btn-ghost btn-block">Upload Cookies</button>
-      <button id="startBtn" class="btn btn-primary btn-block">Start</button>
-      <button id="stopBtn" class="btn btn-danger btn-block">Stop</button>
-    </div>
-  </div>
-
-  <!-- LIVE LOGS - made bigger -->
+  <!-- Cookies and controls -->
   <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div class="live-title">Live Logs</div>
-      <div class="small">Selected: <b id="selectedCount">0</b></div>
+      <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
+      <div style="color:var(--muted); font-size:13px;">Each line in cookies.txt = one cookie string</div>
+    </div>
+
+    <div class="controls">
+      <div class="file-row">
+        <input id="cookiesFile" type="file" accept=".txt" />
+      </div>
+
+      <div class="buttons">
+        <button id="uploadCookies" class="btn-upload">Upload Cookies</button>
+        <button id="startBtn" class="btn-start">Start</button>
+        <button id="stopBtn" class="btn-stop">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live logs -->
+  <div class="card logs-card">
+    <div class="log-title">
+      <div>Live Logs</div>
+      <div style="color:var(--muted); font-weight:700;">Selected: <span id="selectedCount">0</span></div>
     </div>
     <pre id="logArea">No logs yet.</pre>
   </div>
@@ -149,8 +189,7 @@
   <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
-  /* --- same JS logic as provided earlier, adapted to class changes --- */
-
+  // Option sets (same as before)
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
@@ -164,7 +203,7 @@
   const stopBtn=document.getElementById('stopBtn');
   const logArea=document.getElementById('logArea');
   const selectedCount=document.getElementById('selectedCount');
-  let currentJobId=null; let eventSource=null; let cookiesText=null; let lastStartMode=null;
+  let currentJobId=null; let eventSource=null; let cookiesText=null;
 
   function renderOptions(type){
     optionsBox.innerHTML='';
@@ -186,6 +225,7 @@
     const sel=optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
     selectedCount.textContent=sel;
   }
+
   document.querySelectorAll('input[name=rtype]').forEach(el=>{
     el.onchange=()=>renderOptions(document.querySelector('input[name=rtype]:checked').value);
   });
@@ -197,82 +237,71 @@
   document.getElementById('cookiesFile').onchange=async(e)=>{
     const f=e.target.files[0]; if(!f)return;
     const text=await f.text(); cookiesText=text.trim();
-    appendLog('✅ cookies loaded: '+(cookiesText.split(/\r?\n/).length)+' lines');
+    alert('cookies loaded: '+(cookiesText.split('\\n').length)+' lines');
   };
 
-  async function postJSON(url, body){
-    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    const res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json', 'x-admin-token': adminToken }, body: JSON.stringify(body) });
-    try { return await res.json(); } catch(e){ return { ok:false, message:'Invalid JSON response', status: res.status }; }
-  }
-
   startBtn.onclick=async()=>{
-    const adminToken=adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    const adminToken=adminInput.value.trim();
     if(!adminToken){ alert('Set admin token'); return; }
     const type=document.querySelector('input[name=rtype]:checked').value;
     const target=document.getElementById('target').value.trim();
     if(!target){ alert('Set target URL/ID'); return; }
     const options=Array.from(optionsBox.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.dataset.text);
     const payload={ type,target,options,cookies:cookiesText };
-    appendLog('→ Sending /report ...');
     try{
-      const res = await fetch('/report',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':adminToken}, body:JSON.stringify(payload)});
-      if (res.status === 404) throw new Error('not-found');
-      const data = await res.json();
-      if(data.ok){ currentJobId = data.jobId || ('job_'+Date.now()); lastStartMode='report'; appendLog('✅ Job accepted, id: '+currentJobId); connectLogs(currentJobId); return; }
-      appendLog('❌ /report returned error: '+(data.message||JSON.stringify(data)));
-    }catch(e){
-      appendLog('⚠ /report failed: '+e.message+' — trying fallback /start');
-    }
-
-    // fallback to /start if /report not available
-    try{
-      const j2 = await postJSON('/start', { sessionId:'ui', targetUrl:target, setType:type });
-      if (j2.ok){ currentJobId='ui'; lastStartMode='start'; appendLog('✅ /start ok — session: ui'); connectLogs('ui'); }
-      else appendLog('❌ /start failed: '+(j2.message||JSON.stringify(j2)));
-    }catch(err){ appendLog('❌ start error: '+err.message); }
+      const res=await fetch('/report',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':adminToken}, body:JSON.stringify(payload)});
+      const data=await res.json();
+      if(!data.ok){ alert('Server error: '+(data.message||'unknown')); return; }
+      currentJobId=data.jobId || ('job-'+Date.now());
+      logArea.textContent='Job accepted: '+currentJobId+'\\n';
+      connectLogs(currentJobId);
+    }catch(e){ alert('Network error: '+e.message); }
   };
 
   stopBtn.onclick=async()=>{
-    if(!currentJobId && lastStartMode!=='start'){ alert('No job running'); return; }
-    const adminToken=adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    appendLog('→ Sending /stop ...');
-    try{
-      const r = await fetch('/stop',{ method:'POST', headers:{ 'Content-Type':'application/json','x-admin-token':adminToken }, body: JSON.stringify({ sessionId: currentJobId || 'ui' })});
-      const j = await r.json();
-      appendLog((j.ok? '✅ Stop requested' : '❌ Stop failed: '+(j.message||JSON.stringify(j))));
-    }catch(e){ appendLog('❌ Stop error: '+e.message); }
+    if(!currentJobId){ alert('No job running'); return; }
+    await fetch('/stop',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':localStorage.getItem('adminToken')||''}, body:JSON.stringify({jobId:currentJobId})});
+    logArea.textContent+= '\\nSTOP requested for '+currentJobId+'\\n';
     disconnectLogs();
   };
 
-  function appendLog(txt){
-    const ts = new Date().toLocaleTimeString();
-    logArea.textContent += `[${ts}] ${txt}\n`;
-    logArea.scrollTop = logArea.scrollHeight;
-  }
-
   function connectLogs(jobId){
     disconnectLogs();
-    const sid = encodeURIComponent(jobId||'ui');
-    const url = `/events?sessionId=${sid}`;
-    appendLog('Connecting to SSE: '+url);
+    // Try Server-Sent Events path if server implements it
     try{
-      eventSource = new EventSource(url);
-      eventSource.onopen = ()=> appendLog('SSE connected');
-      eventSource.onmessage = e => {
+      eventSource=new EventSource('/events/'+encodeURIComponent(jobId));
+      eventSource.onmessage=(e)=>{ logArea.textContent+=e.data+'\\n'; logArea.scrollTop=logArea.scrollHeight; };
+      eventSource.onerror=(e)=>{ logArea.textContent+='\\n[stream closed]\\n'; eventSource.close(); eventSource=null; };
+    }catch(err){
+      // fallback: poll logs endpoint every 2s (if server provides /logs/:jobId)
+      logArea.textContent+='\\n[EventSource not available — using polling]\\n';
+      let last=0;
+      eventSource = { closed:false, timer:null };
+      async function poll(){
+        if(eventSource.closed) return;
         try{
-          const d = JSON.parse(e.data);
-          appendLog(d.msg || JSON.stringify(d));
-        }catch{
-          appendLog(e.data);
-        }
-      };
-      eventSource.onerror = (e) => { appendLog('[SSE] error/closed'); try{ eventSource.close(); }catch{}; eventSource=null; };
-    }catch(err){ appendLog('SSE init error: '+err.message); }
+          const r=await fetch('/logs/'+encodeURIComponent(jobId)+'?from='+last);
+          if(r.ok){
+            const txt=await r.text();
+            if(txt){
+              logArea.textContent+=txt+'\\n';
+              logArea.scrollTop=logArea.scrollHeight;
+              last = Date.now();
+            }
+          }
+        }catch(e){}
+        eventSource.timer=setTimeout(poll,2000);
+      }
+      poll();
+    }
   }
-  function disconnectLogs(){ if(eventSource){ try{ eventSource.close(); }catch{} eventSource=null; appendLog('SSE disconnected'); } currentJobId=null; lastStartMode=null; }
-
-  window.addEventListener('beforeunload',()=>{ disconnectLogs(); });
+  function disconnectLogs(){
+    if(eventSource){
+      try{ if(eventSource.close) eventSource.close(); if(eventSource.timer) clearTimeout(eventSource.timer); }catch(e){}
+      eventSource=null;
+    }
+    currentJobId=null;
+  }
 
 </script>
 </body>
