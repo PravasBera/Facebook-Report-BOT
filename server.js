@@ -16,6 +16,7 @@ const ROOT = path.resolve(__dirname);
 const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const LOG_DIR = path.join(ROOT, 'logs');
+const puppeteer = require('puppeteer-core');
 let browser;
 
 async function initBrowser() {
