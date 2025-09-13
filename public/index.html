@@ -60,25 +60,16 @@
       max-width:calc(60% - 10px);
     }
 
-    /* Make sure header content never overflows the card horizontally */
-    .header-title {
-      display:block;
-      /* responsive sizing: clamp prevents too-large or too-small */
-      font-size: clamp(20px, 4.5vw, 36px);
-      font-weight:900;
-      line-height:1;
-      margin:0 0 10px 0;
-      background: var(--header-title-grad);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 6px 20px rgba(0,0,0,0.35);
-      white-space: nowrap;          /* keep it on single line */
-      overflow: visible;           /* don't hide the text */
-      text-overflow: clip;
-      padding:0 6px;
-    }
-
+.header-title {
+  white-space: nowrap !important;     /* ভাঙ্গা বন্ধ — এক লাইনে রাখবে */
+  overflow: visible !important;       /* ছাপা/কাটা বন্ধ */
+  text-overflow: clip !important;     /* ellipsis দেখাবে না */
+  display: inline-block !important;   /* inline block করলেই centering ঠিক থাকবে */
+  max-width: 100% !important;         /* পেরেকি হবেনা */
+  font-size: clamp(16px, 4.6vw, 36px) !important; /* responsive: মোবাইলে ছোট হবে */
+  line-height: 1 !important;
+  transform: none !important;         /* কোনো transform এ ঢেকে গেলে মুক্ত করে দেয় */
+}
     .header-meta {
       font-size:14px;
       color: #9fb4d3;
