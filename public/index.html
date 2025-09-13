@@ -1,391 +1,295 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Facebook Automation Tool</title>
-<style>
-  :root{
-    --accent:#2563eb;
-    --muted:#6b7280;
-    --card:#fff;
-    --bg:#f3f6fb;
-    --radius:12px;
-    --shadow: 0 6px 18px rgba(16,24,40,0.08);
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  html,body{height:100%; margin:0; background:linear-gradient(180deg,#e6f0ff 0%, #f7fbff 100%); color:#0f172a;}
-  .wrap{max-width:920px; margin:22px auto; padding:18px;}
-  .header{
-    background:linear-gradient(90deg,#2563eb,#4f46e5);
-    color:white;
-    padding:18px; border-radius:16px; display:flex; gap:18px; align-items:center; justify-content:space-between;
-    box-shadow:var(--shadow);
-  }
-  .title{font-weight:700; font-size:20px; letter-spacing:0.2px;}
-  .meta{font-size:13px; opacity:0.95;}
-  .card{background:var(--card); margin-top:18px; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;}
-  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
-  .input{
-    width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6e9ef; background:#fff; font-size:15px;
-    box-sizing:border-box;
-  }
-  .small{font-size:13px; color:var(--muted);}
-  .segmented{display:flex; gap:8px;}
-  .segmented button{padding:10px 14px; border-radius:999px; border:1px solid transparent; background: #fff; cursor:pointer; box-shadow: 0 4px 10px rgba(12, 18, 37, 0.04);}
-  .segmented button.active{background:linear-gradient(90deg,#eef2ff,#e6f0ff); border-color:#c7d2fe; color:#1e293b; font-weight:600;}
-  .label{font-weight:700; margin-bottom:8px;}
-  .options-list{display:flex; flex-direction:column; gap:10px; margin-top:8px;}
-  .opt{display:flex; align-items:center; gap:12px; padding:12px; border-radius:10px; border:1px solid #eef2f8; background:#fff;}
-  .opt input{width:18px; height:18px;}
-  .actions{display:flex; gap:12px; margin-top:12px; align-items:center;}
-  .btn{padding:12px 18px; border-radius:10px; cursor:pointer; border:0; font-weight:700;}
-  .btn-primary{background:var(--accent); color:white;}
-  .btn-ghost{background:#fff; border:1px solid #e6e9ef;}
-  .upload{display:flex; gap:10px; align-items:center;}
-  .logbox{margin-top:14px; border-radius:10px; background:#0f172a; color:#d1fae5; min-height:120px; padding:12px; font-family:monospace; font-size:13px; overflow:auto;}
-  .status{display:flex; gap:10px; align-items:center;}
-  .dot{width:12px; height:12px; border-radius:999px; background:#ef4444;}
-  .dot.running{background:#10b981;}
-  footer{margin-top:18px; text-align:center; color:var(--muted); font-size:13px;}
-  @media (min-width:860px){
-    .grid{display:grid; grid-template-columns:1fr 360px; gap:18px;}
-    .card.side{position:sticky; top:22px; height: fit-content;}
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Facebook Automation Tool</title>
+  <style>
+    body { font-family: Inter, Arial; background:#f4f7fb; margin:0; padding:20px; color:#111; display:flex; flex-direction:column; min-height:100vh;}
+    .card { background:white; border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(20,30,60,0.08); margin-bottom:16px;}
+    header { font-size:20px; font-weight:700; color:#1869ff; margin-bottom:20px; display:flex;justify-content:space-between;align-items:center;}
+    .meta { font-size:13px; color:#0b1220; opacity:0.8; text-align:right; }
+    input[type=text], textarea { width:100%; padding:12px; border-radius:8px; border:1px solid #e4e8f0; box-sizing:border-box; }
+    .radio-row { display:flex; gap:10px; margin:12px 0; }
+    .options-list { display:block; margin-top:12px; }
+    .option-item { display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px; border:1px solid #eef2f7; margin-bottom:10px; background:#fff;}
+    .btn { padding:10px 16px; border-radius:10px; cursor:pointer; border:none; font-weight:700;}
+    .btn-primary { background:#1869ff; color:white; }
+    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:#1869ff; }
+    .flex { display:flex; gap:10px; align-items:center; }
+    .small { font-size:13px; color:#666; }
+    pre{ background:#0b1220; color:#0aff8d; padding:12px; border-radius:8px; max-height:300px; overflow:auto; white-space:pre-wrap; word-break:break-word;}
+    footer { margin-top:auto; text-align:center; font-size:13px; color:#666; padding:12px 0; }
+    .badge { font-size:12px; color:#fff; background:#06b6d4; padding:6px 8px; border-radius:8px;}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div>
-        <div class="title">⚡ Facebook Automation Tool</div>
-        <div class="meta">Author: <strong>PRAVAS BERA</strong> • Version: <strong>Premium</strong> • Country: <strong>INDIA</strong></div>
-      </div>
-      <div class="meta small">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
+
+<header>
+  <div>
+    ⚡ <strong>Facebook Automation Tool</strong>
+    <div style="font-size:12px;color:#444;margin-top:6px;">
+      👤 Author: <b>PRAVAS BERA</b> &nbsp;|&nbsp; 🌍 Version: <b>Premium</b> &nbsp;|&nbsp; 🇮🇳 Country: <b>INDIA</b>
     </div>
-
-    <div class="grid" style="margin-top:16px;">
-      <!-- LEFT / MAIN -->
-      <div>
-        <div class="card">
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input id="adminToken" class="input" placeholder="Enter Admin Token here (x-admin-token)" />
-            <button id="saveToken" class="btn btn-ghost">Save</button>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="label">Choose Report Type</div>
-            <div class="segmented" id="typeButtons">
-              <button data-type="profile" class="active">Profile</button>
-              <button data-type="page">Page</button>
-              <button data-type="post">Post</button>
-            </div>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="label">Target URL / ID</div>
-            <input id="target" class="input" placeholder="https://facebook.com/..." />
-          </div>
-
-          <div id="optionsContainer" style="margin-top:14px;">
-            <div class="label" id="optionsTitle">Profile Report Options</div>
-            <div class="options-list" id="optionsList">
-              <!-- options inserted by JS -->
-            </div>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="label">Cookies upload</div>
-            <div class="upload">
-              <input id="cookiesFile" type="file" accept=".txt" />
-              <button id="uploadCookies" class="btn btn-ghost">Upload Cookies</button>
-              <div class="small" id="cookiesStatus">Each line = 1 cookie string</div>
-            </div>
-          </div>
-
-          <div style="margin-top:14px;" class="actions">
-            <button id="startBtn" class="btn btn-primary">Start</button>
-            <button id="stopBtn" class="btn btn-ghost">Stop</button>
-            <div class="status" style="margin-left:auto;">
-              <div id="serverDot" class="dot"></div>
-              <div id="serverText" class="small">Idle</div>
-            </div>
-          </div>
-
-          <div style="margin-top:14px;">
-            <div class="label">Live Logs</div>
-            <div id="logbox" class="logbox"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT / SIDE -->
-      <div>
-        <div class="card side">
-          <div style="font-weight:700; margin-bottom:8px;">Job Summary</div>
-          <div class="small" id="summary">Selected: 0</div>
-
-          <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f8;" />
-
-          <div style="font-weight:700; margin-bottom:8px;">Flow Set</div>
-          <select id="flowSet" class="input" style="padding:10px;">
-            <option value="">-- select flow --</option>
-            <!-- you can populate these options from server if you want -->
-          </select>
-
-          <div style="margin-top:12px;">
-            <div class="small">Admin token is used in header: <code>x-admin-token</code></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer class="small">© 2025 Facebook Automation Tool — Made with ❤️ by INDIAN DANGER OF BULLET TEAM</footer>
+    <div style="font-size:12px;color:#b45309;margin-top:6px;">🔥 <b>INDIAN DANGER OF BULLET TEAM</b> 🔥</div>
   </div>
 
+  <div class="meta">
+    <div class="small">Admin control panel</div>
+    <div style="margin-top:8px;"><span class="badge">Ready</span></div>
+  </div>
+</header>
+
+<div class="card">
+  <label>Enter Admin Token here (x-admin-token)</label>
+  <div style="display:flex; gap:8px; margin-top:8px;">
+    <input id="adminToken" type="text" placeholder="x-admin-token" />
+    <button id="saveToken" class="btn btn-ghost">Save</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="radio-row">
+    <label><input type="radio" name="rtype" value="profile" checked> Profile</label>
+    <label><input type="radio" name="rtype" value="page"> Page</label>
+    <label><input type="radio" name="rtype" value="post"> Post</label>
+  </div>
+
+  <label>Target URL / ID</label>
+  <input id="target" type="text" placeholder="https://facebook.com/..." />
+
+  <div id="optionsBox" class="options-list"></div>
+
+  <div style="margin-top:12px;">
+    <label>Cookies upload</label><br/>
+    <input id="cookiesFile" type="file" accept=".txt" />
+    <div style="margin-top:8px;" class="flex">
+      <button id="uploadCookies" class="btn btn-ghost">Upload Cookies</button>
+      <button id="startBtn" class="btn btn-primary">Start</button>
+      <button id="stopBtn" class="btn" style="background:#ff4d4f;color:white;">Stop</button>
+    </div>
+    <div class="small" style="margin-top:8px;">Each line in cookies.txt = one cookie string (fr=...; xs=...; c_user=...; ...)</div>
+  </div>
+</div>
+
+<div class="card">
+  <h4>Live Logs</h4>
+  <div id="liveInfo" class="small">Selected: <span id="selectedCount">0</span></div>
+  <pre id="logArea">No logs yet.</pre>
+</div>
+
+<footer>
+  © 2025 | Facebook Automation Tool | Developed With ❤️ by BULLET TEAM ☠️
+</footer>
+
 <script>
-/* --- Sample options (maps to flows.js names). Replace or extend as needed --- */
-const FLOW_OPTIONS = {
-  profile: [
-    "Problem involving someone under 18",
-    "Bullying, harassment or abuse",
-    "Violent, hateful or disturbing content",
-    "Adult content",
-    "Fake profile"
-  ],
-  page: [
-    "Problem involving someone under 18",
-    "Bullying, harassment or abuse",
-    "Violent, hateful or disturbing content",
-    "Adult content",
-    "Fake page"
-  ],
-  post: [
-    "Problem involving someone under 18",
-    "Bullying, harassment or abuse",
-    "Violent, hateful or disturbing content",
-    "Adult content"
-  ]
-};
-
-const typeButtons = document.getElementById('typeButtons');
-const optionsList = document.getElementById('optionsList');
-const optionsTitle = document.getElementById('optionsTitle');
-const summary = document.getElementById('summary');
-const logbox = document.getElementById('logbox');
-const serverDot = document.getElementById('serverDot');
-const serverText = document.getElementById('serverText');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const adminTokenInput = document.getElementById('adminToken');
-const saveTokenBtn = document.getElementById('saveToken');
-const cookiesFile = document.getElementById('cookiesFile');
-const uploadCookiesBtn = document.getElementById('uploadCookies');
-const targetInput = document.getElementById('target');
-const flowSet = document.getElementById('flowSet');
-
-let currentType = 'profile';
-let cookiesContent = null;
-let eventSource = null;
-let selectedCount = 0;
-
-function setActiveType(t){
-  currentType = t;
-  Array.from(typeButtons.querySelectorAll('button')).forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.type===t);
-  });
-  renderOptions();
-}
-
-function renderOptions(){
-  optionsList.innerHTML = '';
-  const opts = FLOW_OPTIONS[currentType] || [];
-  optionsTitle.textContent = (currentType.charAt(0).toUpperCase()+currentType.slice(1)) + ' Report Options';
-  selectedCount = 0;
-  opts.forEach((label, idx)=>{
-    const id = `opt_${currentType}_${idx}`;
-    const row = document.createElement('label');
-    row.className = 'opt';
-    row.innerHTML = `<input type="checkbox" id="${id}" value="${label}" /> <div style="flex:1">${label}</div>`;
-    optionsList.appendChild(row);
-
-    row.querySelector('input').addEventListener('change', ()=> {
-      updateSummary();
-    });
-  });
-  updateSummary();
-}
-
-function updateSummary(){
-  const checked = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
-  selectedCount = checked.length;
-  summary.textContent = `Selected: ${selectedCount}`;
-}
-
-typeButtons.addEventListener('click', (e)=>{
-  const b = e.target.closest('button[data-type]');
-  if(!b) return;
-  setActiveType(b.dataset.type);
-});
-
-// Save admin token to localStorage
-saveTokenBtn.addEventListener('click', ()=>{
-  const t = adminTokenInput.value.trim();
-  localStorage.setItem('adminToken', t);
-  alert('Admin token saved locally.');
-});
-
-// read saved token on load
-window.addEventListener('load', ()=>{
-  const t = localStorage.getItem('adminToken');
-  if(t){ adminTokenInput.value = t; }
-  setActiveType(currentType);
-
-  // Try attach to events automatically
-  startSSE();
-});
-
-// file upload preview
-uploadCookiesBtn.addEventListener('click', async ()=>{
-  const f = cookiesFile.files[0];
-  if(!f){ alert('Choose a cookies.txt file first'); return; }
-  const txt = await f.text();
-  cookiesContent = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  document.getElementById('cookiesStatus').textContent = `${cookiesContent.length} cookies loaded`;
-});
-
-// Start job
-startBtn.addEventListener('click', async ()=>{
-  const token = adminTokenInput.value.trim();
-  if(!token){ alert('Please enter admin token'); return; }
-  const target = targetInput.value.trim();
-  if(!target){ alert('Enter target URL / ID'); return; }
-
-  // collect selected options
-  const options = Array.from(optionsList.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
-
-  const payload = {
-    type: currentType,
-    target,
-    options,
-    cookies: cookiesContent || null
+  // --- option sets (exact same as you listed) ---
+  const OPTION_SETS = {
+    profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
+    page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
+    post: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content']
   };
 
-  setServerState('starting');
+  // DOM
+  const adminInput = document.getElementById('adminToken');
+  const saveToken = document.getElementById('saveToken');
+  const optionsBox = document.getElementById('optionsBox');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const logArea = document.getElementById('logArea');
+  const selectedCount = document.getElementById('selectedCount');
+  let currentJobId = null;
+  let es = null;
+  let cookiesText = null;
+  let lastStartMode = null; // 'report' or 'start' (for SSE path)
 
-  try{
-    const res = await fetch('/report', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-admin-token': token
-      },
-      body: JSON.stringify(payload)
+  // load saved token
+  adminInput.value = localStorage.getItem('adminToken') || '';
+
+  saveToken.onclick = () => {
+    localStorage.setItem('adminToken', adminInput.value.trim());
+    alert('Admin token saved locally');
+  };
+
+  // render options
+  function renderOptions(type){
+    optionsBox.innerHTML = '';
+    OPTION_SETS[type].forEach((opt,i)=>{
+      const id = `${type}-opt-${i}`;
+      const div = document.createElement('div');
+      div.className = 'option-item';
+      div.innerHTML = `<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
+      optionsBox.appendChild(div);
     });
-    const j = await res.json();
-    if(!res.ok){
-      alert('Server error: ' + (j?.message || res.statusText));
-      setServerState('idle');
-      return;
-    }
-    appendLog(`Job accepted: ${j.message || 'ok'}`);
-    setServerState('running');
-    // open SSE if not open
-    if(!eventSource) startSSE();
-  }catch(err){
-    appendLog('Start request failed: ' + err.message);
-    setServerState('idle');
+    attachOptionListeners();
   }
-});
 
-// Stop job
-stopBtn.addEventListener('click', async ()=>{
-  const token = adminTokenInput.value.trim();
-  if(!token){ alert('Please enter admin token'); return; }
-  setServerState('stopping');
-  try{
-    // POST /stop (server needs to implement)
-    const res = await fetch('/stop', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'x-admin-token': token },
-      body: JSON.stringify({ reason:'manual' })
-    });
-    const j = await res.json();
-    appendLog(`Stop requested: ${j?.message || res.statusText}`);
-    setServerState('idle');
-  }catch(err){
-    appendLog('Stop request failed: ' + err.message);
-    setServerState('idle');
+  function attachOptionListeners(){
+    const checkboxes = optionsBox.querySelectorAll('input[type=checkbox]');
+    checkboxes.forEach(ch=>ch.onchange = updateSelectedCount);
+    updateSelectedCount();
   }
-});
-
-/* --- SSE (live logs) --- */
-function startSSE(){
-  if(typeof(EventSource) === 'undefined'){ appendLog('SSE not supported in this browser'); return; }
-  if(eventSource) return;
-  try{
-    eventSource = new EventSource('/events');
-    eventSource.onopen = ()=> appendLog('[SSE] connected');
-    eventSource.onerror = (e)=> {
-      appendLog('[SSE] connection error or closed');
-      // do not auto-reconnect forever; attempt manual reconnect after 5s
-      eventSource.close();
-      eventSource = null;
-      setTimeout(()=> startSSE(), 5000);
-    };
-    eventSource.addEventListener('log', (ev)=>{
-      appendLog(ev.data);
-    });
-    eventSource.addEventListener('status', (ev)=>{
-      const data = ev.data;
-      if(data === 'running') setServerState('running');
-      else if(data === 'idle') setServerState('idle');
-      appendLog('[status] ' + data);
-    });
-  }catch(err){
-    appendLog('SSE failed: ' + err.message);
+  function updateSelectedCount(){
+    const sel = optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
+    selectedCount.textContent = sel;
   }
-}
 
-function appendLog(text){
-  const line = document.createElement('div');
-  line.textContent = new Date().toLocaleTimeString() + '  ' + text;
-  logbox.appendChild(line);
-  logbox.scrollTop = logbox.scrollHeight;
-}
-
-/* server state UI */
-function setServerState(s){
-  if(s === 'running'){
-    serverDot.classList.add('running');
-    serverText.textContent = 'Running';
-  } else if(s === 'starting'){
-    serverDot.classList.remove('running');
-    serverText.textContent = 'Starting…';
-  } else if(s === 'stopping'){
-    serverDot.classList.remove('running');
-    serverText.textContent = 'Stopping…';
-  } else {
-    serverDot.classList.remove('running');
-    serverText.textContent = 'Idle';
-  }
-}
-
-/* optional: allow flowSet being filled (if server provides /flows endpoint)
-fetch('/flows').then(r=>r.json()).then(list=>{
-  list.forEach(f=>{
-    const opt = document.createElement('option');
-    opt.value = f.name; opt.textContent = f.title || f.name;
-    flowSet.appendChild(opt);
+  document.querySelectorAll('input[name=rtype]').forEach(el=>{
+    el.onchange = ()=> renderOptions(document.querySelector('input[name=rtype]:checked').value);
   });
-}).catch(()=>{/* ignore */});
 
-/* helper: quick keyboard shortcuts */
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){
-    startBtn.click();
+  renderOptions('profile');
+
+  // cookies file read
+  document.getElementById('cookiesFile').onchange = async (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const txt = await f.text();
+    cookiesText = txt.trim();
+    appendLog(`✅ cookies loaded (${cookiesText.split(/\r?\n/).length} lines)`);
+  };
+
+  // upload cookies to server (admin endpoint)
+  document.getElementById('uploadCookies').onclick = async () => {
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) return alert('Admin token required to upload cookies');
+    const f = document.getElementById('cookiesFile').files[0];
+    if (!f) return alert('Choose cookies .txt file first');
+    const fd = new FormData();
+    fd.append('cookies', f);
+    appendLog('Uploading cookies...');
+    try {
+      const res = await fetch('/uploadCookies', { method: 'POST', headers: { 'x-admin-token': adminToken }, body: fd });
+      const j = await res.json();
+      if (j.ok) appendLog('✅ Cookies uploaded to server: ' + (j.path || 'uploads/cookies.txt'));
+      else appendLog('❌ Upload failed: ' + (j.message || j.error || JSON.stringify(j)));
+    } catch (e) { appendLog('❌ Upload error: ' + e.message); }
+  };
+
+  // helpers
+  function appendLog(text){
+    const ts = new Date().toLocaleTimeString();
+    logArea.textContent += `[${ts}] ${text}\n`;
+    logArea.scrollTop = logArea.scrollHeight;
   }
-});
+
+  // start job: try /report first, fallback to /start
+  startBtn.onclick = async () => {
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) { alert('Set admin token'); return; }
+    const type = document.querySelector('input[name=rtype]:checked').value;
+    const target = document.getElementById('target').value.trim();
+    if (!target) { alert('Set target URL/ID'); return; }
+    const options = Array.from(optionsBox.querySelectorAll('input[type=checkbox]:checked')).map(i => i.dataset.text);
+    if (!options.length) { if(!confirm('No specific report options selected — continue?')) return; }
+
+    // try /report (user earlier referenced it) — this endpoint may be a custom one returning {ok:true, jobId}
+    const payload = { type, target, options, cookies: cookiesText || null };
+    appendLog('Attempting POST /report ...');
+    try {
+      const r = await fetch('/report', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify(payload) });
+      if (r.status === 404) throw new Error('not-found');
+      const j = await r.json();
+      if (j.ok) {
+        currentJobId = j.jobId || j.sessionId || ('job_' + Date.now());
+        lastStartMode = 'report';
+        appendLog('✅ /report accepted — jobId: ' + currentJobId);
+        connectSSEForJob(currentJobId);
+        return;
+      } else {
+        appendLog('❌ /report failed: ' + (j.message || JSON.stringify(j)));
+        // fallback to /start below
+      }
+    } catch (e) {
+      appendLog('⚠ /report unavailable or error: ' + e.message + ' — falling back to /start');
+    }
+
+    // --- fallback: call /start (server.js expects {sessionId,targetUrl,setType,setId}) ---
+    try {
+      const body = { sessionId: 'ui', targetUrl: target, setType: type, setId: '' };
+      appendLog('Posting to /start (fallback) ...');
+      const r2 = await fetch('/start', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify(body) });
+      const j2 = await r2.json();
+      if (j2.ok) {
+        currentJobId = 'ui';
+        lastStartMode = 'start';
+        appendLog('✅ /start accepted — using sessionId: ui');
+        connectSSEForJob('ui');
+      } else {
+        appendLog('❌ /start failed: ' + (j2.message || JSON.stringify(j2)));
+        alert('Start failed: ' + (j2.message || JSON.stringify(j2)));
+      }
+    } catch (err) {
+      appendLog('❌ start request error: ' + err.message);
+      alert('Network error: ' + err.message);
+    }
+  };
+
+  // stop job
+  stopBtn.onclick = async () => {
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) { alert('Admin token required'); return; }
+
+    // if lastStartMode was report and we have jobId -> try /stop with jobId or sessionId
+    appendLog('Sending stop request ...');
+    try {
+      // try generic /stop with sessionId 'ui' or jobId if set
+      const sid = currentJobId || 'ui';
+      const res = await fetch('/stop', { method: 'POST', headers: {'Content-Type':'application/json','x-admin-token':adminToken}, body: JSON.stringify({ sessionId: sid, jobId: currentJobId }) });
+      const j = await res.json();
+      appendLog((j.ok ? '✅ Stop requested' : ('❌ Stop failed: ' + (j.message || JSON.stringify(j)))));
+    } catch (e) {
+      appendLog('❌ Stop error: ' + e.message);
+    } finally {
+      disconnectSSE();
+    }
+  };
+
+  // SSE connection helper (works with server's /events?sessionId=...)
+  function connectSSEForJob(jobId) {
+    disconnectSSE();
+    // normalize jobId -> use as sessionId param
+    const sid = encodeURIComponent(jobId || 'ui');
+    const url = `/events?sessionId=${sid}`;
+    appendLog('Connecting SSE -> ' + url);
+    try {
+      es = new EventSource(url);
+      es.onopen = () => appendLog('SSE connected');
+      es.onmessage = e => {
+        // some servers send plain text or JSON in data; try JSON parse
+        try {
+          const d = JSON.parse(e.data);
+          appendLog('[msg] ' + (d.msg || JSON.stringify(d)));
+        } catch (err) {
+          appendLog('[raw] ' + e.data);
+        }
+      };
+      ['log','info','warn','error','success','done','fatal'].forEach(ev=>{
+        es.addEventListener(ev, e => {
+          try {
+            const p = JSON.parse(e.data);
+            appendLog(`[${ev}] ${p.msg || JSON.stringify(p)}`);
+          } catch {
+            appendLog(`[${ev}] ${e.data}`);
+          }
+        });
+      });
+      es.onerror = (ev) => { appendLog('[SSE] connection error/closed'); es.close(); };
+    } catch (err) {
+      appendLog('SSE error: ' + err.message);
+    }
+  }
+
+  function disconnectSSE(){
+    if (es) {
+      try { es.close(); } catch {}
+      es = null;
+      appendLog('SSE disconnected');
+    }
+    currentJobId = null;
+  }
+
+  // ensure we disconnect when page unloads
+  window.addEventListener('beforeunload', () => { disconnectSSE(); });
 </script>
 </body>
 </html>
