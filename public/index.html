@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
 <head>
@@ -51,22 +52,30 @@
       max-width: 100%;
     }
     /* use clamp so font scales smoothly across devices */
-    .header-title {
-  font-size: 36px;
-  font-weight: 900;
+    /* REPLACE your existing .header-title with this block */
+.header-title {
+  /* responsive font: shrinks on small screens, caps at 48px on large */
+  font-size: clamp(18px, 6.2vw, 48px);
+  font-weight: 800;
   letter-spacing: -0.01em;
   margin: 0 0 8px 0;
+
+  /* keep gradient text effect */
   background: var(--header-title-grad);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  text-shadow: 0 6px 24px rgba(0,0,0,0.45);
 
-  /* fix */
-  white-space: normal;    /* allow wrapping */
-  text-align: center;     /* center align */
-  line-height: 1.2;       /* nice spacing if breaks into 2 lines */
+  /* KEEP IT IN ONE LINE */
+  white-space: nowrap;        /* do not wrap */
+  overflow: hidden;          /* hide overflow just in case */
+  text-overflow: clip;       /* don't add ellipsis — it will shrink instead */
+  display: inline-block;     /* allow width calculation on inline element */
+
+  /* small visual tuning */
+  line-height: 1;
+  text-align: center;
 }
     .header-subline {
       display:flex;
