@@ -17,16 +17,27 @@
       --header-title-grad: linear-gradient(90deg,#ff5f5f 0%, #ff3db8 50%, #7a5bff 100%);
     }
     *{box-sizing:border-box}
-    body{
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background:var(--page-bg);
-      margin:0; padding:18px;
-      color:#0f1724;
-      display:flex; flex-direction:column; min-height:100vh;
-    }
+    body {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--page-bg);
+  margin: 0;
+  padding: 18px;
+  color: #0f1724;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 
-    /* TOP ROW layout */
-    .top-row { display:flex; gap:18px; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; }
+  align-items: center;      /* 👈 সব card center হবে horizontally */
+}
+
+.top-row {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;     /* 👈 height match করবে */
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  justify-content: center;  /* 👈 পুরো row center হবে */
+}
 
     /* Header: dark big title that stays single-line */
     .header-wrap {
@@ -39,8 +50,8 @@
       flex-direction:column;
       align-items:center;
       text-align:center;
-      flex: 1 1 60%;
-      min-width:260px;
+      flex: 1 1 45%;
+      min-width:500px;
     }
     /* clamp ensures the title shrinks on small screens to stay on one line */
     .header-title {
