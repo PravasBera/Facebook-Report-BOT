@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -26,56 +25,57 @@
       display:flex; flex-direction:column; min-height:100vh;
     }
 
-    /* top row layout */
-    .top-row {
+    /* TOP ROW layout */
+    .top-row { display:flex; gap:18px; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; }
+
+    /* Header: dark big title that stays single-line */
+    .header-wrap {
+      background: #071025;
+      border-radius:18px;
+      padding:22px 28px;
+      color:#dbeafe;
+      box-shadow: 0 14px 40px rgba(2,6,23,0.6);
       display:flex;
-      gap:18px;
-      align-items:flex-start;
-      margin-bottom:18px;
-      flex-wrap:wrap;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      flex: 1 1 60%;
+      min-width:260px;
     }
-
-.header-wrap{
-  background:#071025;
-  color:#fff;
-  border-radius:14px;
-  padding:20px;
-  text-align:center;
-  box-shadow:0 10px 30px rgba(2,6,23,0.5);
-}
-
-.header-title{
-  font-size: clamp(22px, 6vw, 42px);
-  font-weight:900;
-  margin:0 0 8px;
-  line-height:1.2;
-  white-space:nowrap;
-  overflow:visible;
-  text-overflow:unset;
-  background: linear-gradient(90deg,#ff5f5f 0%, #ff3db8 50%, #7a5bff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.header-meta{
-  font-size:14px;
-  color:#9fb4d3;
-  display:flex;
-  gap:12px;
-  justify-content:center;
-  flex-wrap:wrap;
-  align-items:center;
-  margin-bottom:6px;
-}
-
-.team-badge{
-  margin-top:6px;
-  font-weight:900;
-  font-size:16px;
-  color:#4fb0ff;
-  letter-spacing:0.6px;
-}
+    /* clamp ensures the title shrinks on small screens to stay on one line */
+    .header-title {
+      font-weight:800;
+      margin:0 0 8px 0;
+      line-height:1;
+      white-space:nowrap;          /* force single line */
+      overflow:visible;
+      font-size: clamp(20px, 5.6vw, 44px); /* responsive */
+      background: var(--header-title-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      text-shadow: 0 6px 20px rgba(0,0,0,0.45);
+      letter-spacing: -0.01em;
+    }
+    .header-meta {
+      font-size:14px;
+      color: #9fb4d3;
+      margin-top:6px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .header-meta strong { color:#fff; font-weight:800; }
+    .team-badge {
+      margin-top:10px;
+      color:#4fb0ff;
+      font-weight:900;
+      letter-spacing:0.6px;
+      font-size:15px;
+    }
 
     /* Card style */
     .card {
@@ -83,16 +83,12 @@
       padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
     }
 
-    /* Report card (same as before) */
-    .report-card {
-      padding:18px; border-radius:16px; display:block;
-      flex: 1 1 40%;
-      min-width:280px;
-    }
+    /* Report card (side-by-side on wide screens) */
+    .report-card { padding:18px; border-radius:16px; display:block; flex: 1 1 40%; min-width:300px; }
     .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
 
-    /* grid radio to keep two on first row and one on next row */
+    /* Radio layout: first two in row, third on its own (works responsive) */
     .radio-row {
       display:grid;
       grid-template-columns: repeat(2, 1fr);
@@ -104,66 +100,92 @@
       display:flex; align-items:center; gap:10px;
       padding:12px 18px; border-radius:999px; background:var(--soft);
       border:1px solid transparent; font-weight:700; color:#0b1220;
-      justify-content:center;
-      min-height:48px;
+      justify-content:center; min-height:48px;
     }
-    .radio-pill.span-two { grid-column: 1 / -1; justify-content:flex-start; padding-left:22px; }
+    .radio-pill:nth-child(3){ grid-column: 1 / -1; } /* third item spans full width */
     .radio-pill input{ transform:scale(1.05); margin-right:8px; }
 
-    /* token */
+    /* Admin token */
     .token-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
-    .token-row input[type=text] { flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb; background:#fbfdff; font-weight:600; color:#0b1220; }
-
+    .token-row input[type=text] {
+      flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
+      background:#fbfdff; font-weight:600; color:#0b1220;
+    }
     .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
     .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; border-radius:12px; }
+    .btn-primary { background:var(--blue); color:white; }
+
+    /* Target input & options */
+    .target { margin-top:14px; }
+    .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
+    .options-list { margin-top:12px; display:grid; gap:12px; }
+    .option-item {
+      display:flex; gap:12px; align-items:center; padding:14px;
+      border-radius:12px; border:1px solid #eef3fb; background:white;
+      font-weight:700; font-size:15px;
+    }
+    .option-item input{ width:20px; height:20px; transform:scale(1.05); }
+
+    /* Controls */
+    .controls { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
+    .controls .file-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .controls .file-row input[type=file]{ flex:0 0 auto; }
+    .controls .buttons { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
     .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
     .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
     .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
 
-    .target input { width:100%; padding:14px; border-radius:12px; border:1px solid #e6eef9; }
-    .options-list { margin-top:12px; display:grid; gap:12px; }
-    .option-item { display:flex; gap:12px; align-items:center; padding:14px; border-radius:12px; border:1px solid #eef3fb; background:white; font-weight:700; font-size:15px; }
-
-    /* logs */
+    /* Live logs */
     .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); }
     .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; color:#f1d4ff; }
     .log-title .autoscroll { color:#d7b1ff; display:flex; gap:8px; align-items:center; font-weight:700; }
-    pre.log-area{ background:#000; color:#66ff99; padding:22px; border-radius:12px; height:520px; overflow:auto; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:15px; border: 1px solid rgba(255,255,255,0.04); box-shadow: inset 0 6px 20px rgba(0,0,0,0.6); white-space:pre-wrap; }
+
+    pre.log-area{
+      background:#000;
+      color:#66ff99;
+      padding:22px;
+      border-radius:12px;
+      height:420px;
+      overflow:auto;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size:14px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 6px 20px rgba(0,0,0,0.6);
+      white-space:pre-wrap;
+    }
 
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
-    .small { color:var(--muted); font-size:13px; }
 
-    /* responsiveness tweaks */
     @media(max-width:900px){
       .top-row { flex-direction:column; }
       .header-wrap, .report-card { flex: none; width: auto; }
-      .header-title { font-size: clamp(20px, 8vw, 34px); }
       .radio-row { grid-template-columns: 1fr; }
-      .radio-pill.span-two { grid-column:auto; }
+      .radio-pill:nth-child(3){ grid-column:auto; } /* mobile: keep stacking */
+      .header-wrap { padding:18px; }
     }
+
     @media(min-width:980px){
-      body { padding:32px; }
-      .header-wrap { padding:36px; border-radius:20px; }
-      .header-title { font-size:48px; }
-      .log-area{ height:640px; }
+      body { padding:28px; }
+      .header-wrap { padding:28px 36px; border-radius:20px; }
+      pre.log-area{ height:520px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP ROW: header + report card (side-by-side on wide screens) -->
   <div class="top-row">
+    <!-- Header -->
     <div class="header-wrap" role="banner" aria-label="Application header">
-      <!-- Title: will scale responsively and not break awkwardly -->
-<div class="header-wrap">
-  <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
-  <div class="header-meta">
-    <div>👤 Author: <strong>PRAVAS BERA</strong></div>
-    <div>🌍 Version: <strong>Premium</strong></div>
-    <div>🇮🇳 Country: <strong>INDIA</strong></div>
-  </div>
-  <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
-</div>
+      <div class="header-title">⚡ Facebook Auto Report Tool ⚡</div>
+      <div class="header-meta" role="list" aria-hidden="false">
+        <div role="listitem">👤 Author: <strong>PRAVAS BERA</strong></div>
+        <div role="separator">|</div>
+        <div role="listitem">🌍 Version: <strong>Premium</strong></div>
+        <div role="separator">|</div>
+        <div role="listitem">🇮🇳 Country: <strong>INDIA</strong></div>
+      </div>
+      <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
+    </div>
 
     <!-- Report card -->
     <div class="card report-card" role="region" aria-label="Choose report type">
@@ -175,7 +197,6 @@
       <div class="radio-row" role="radiogroup" aria-label="Report type">
         <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
         <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
-        <!-- make Post a full-width row on larger screens -->
         <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
       </div>
 
@@ -224,7 +245,7 @@
       <div class="autoscroll"><input id="autoScroll" type="checkbox" checked /> <label for="autoScroll">Auto-scroll</label></div>
     </div>
 
-    <pre id="logArea" class="log-area" aria-live="polite">No logs yet.</pre>
+    <pre id="logArea" class="log-area" aria-live="polite">✅</pre>
   </div>
 
   <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
@@ -343,7 +364,7 @@
   }
 
   // initial message
-  log('Welcome KING 👑 — Your Brahmastra is ready.');
+  log('Welcome KING 👑— Your Brahmastra is ready.');
 </script>
 </body>
 </html>
