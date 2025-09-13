@@ -52,17 +52,22 @@
     }
     /* use clamp so font scales smoothly across devices */
     .header-title {
-  font-size:20px;
-  font-weight:500;
+  font-size: 28px;
+  font-weight: 900;
   letter-spacing: -0.01em;
-  margin:0 0 8px 0;
+  margin: 0 0 8px 0;
   background: var(--header-title-grad);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  text-shadow: 0 6px 20px rgba(0,0,0,0.45);
-  white-space: nowrap;   /* 👈 এটাই ফাইনাল ফিক্স */
+  text-shadow: 0 6px 24px rgba(0,0,0,0.45);
+
+  white-space: nowrap;       /* এক লাইনে রাখবে */
+  overflow: hidden;          /* container ছাড়ালে কেটে দেবে */
+  text-overflow: ellipsis;   /* কেটে গেলে ... দেখাবে */
+  width: 100%;               /* container max-width এর সাথে bind করবে */
+  text-align: center;        /* সবসময় মাঝে থাকবে */
 }
     .header-subline {
       display:flex;
