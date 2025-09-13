@@ -16,10 +16,19 @@ const ROOT = path.resolve(__dirname);
 const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const LOG_DIR = path.join(ROOT, 'logs');
-const browser = await puppeteer.launch({
-  executablePath: '/usr/bin/chromium-browser', // অথবা '/usr/bin/chromium'
-  headless: true,
-  args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage'],
+let browser;
+
+async function initBrowser() {
+  browser = await puppeteer.launch({
+    executablePath: '/usr/bin/chromium-browser', // অথবা '/usr/bin/chromium'
+    headless: true,
+    args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage'],
+  });
+  console.log("✅ Browser initialized");
+}
+
+initBrowser().catch(err => {
+  console.error("Browser launch failed:", err);
 });
 // ensure folders
 for (const d of [UPLOAD_DIR, PUBLIC_DIR, LOG_DIR]) {
