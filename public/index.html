@@ -25,12 +25,13 @@
       display:flex; flex-direction:column; min-height:100vh;
     }
 
-    /* layout row that holds header + report card on wide screens */
+    /* top row layout */
     .top-row {
       display:flex;
       gap:18px;
       align-items:flex-start;
       margin-bottom:18px;
+      flex-wrap:wrap;
     }
 
     /* Header: big dark gradient title */
@@ -93,23 +94,34 @@
     .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
 
-    .radio-row { display:flex; gap:12px; margin-top:6px; flex-wrap:wrap; }
+    /* RADIO layout: grid so 2 items first row, the 3rd spans full width */
+    .radio-row {
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:12px;
+      margin-top:6px;
+      align-items:center;
+    }
     .radio-pill {
       display:flex; align-items:center; gap:10px;
       padding:12px 18px; border-radius:999px; background:var(--soft);
       border:1px solid transparent; font-weight:700; color:#0b1220;
-      min-width:110px; justify-content:center;
+      justify-content:center;
+      min-height:48px;
     }
+    /* make the "Post" pill span two columns so it sits on its own line */
+    .radio-pill.span-two { grid-column: 1 / -1; justify-content:flex-start; padding-left:22px; }
+
     .radio-pill input{ transform:scale(1.05); margin-right:8px; }
 
     /* admin token */
-    .token-row { display:flex; gap:10px; align-items:center; }
+    .token-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
     .token-row input[type=text] {
       flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
       background:#fbfdff; font-weight:600; color:#0b1220;
     }
     .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
-    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; }
+    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; border-radius:12px; }
     .btn-primary { background:var(--blue); color:white; }
 
     /* Target input & options */
@@ -160,6 +172,9 @@
       .top-row { flex-direction:column; }
       .header-wrap, .report-card { flex: none; width: auto; }
       .header-title { font-size:34px; }
+      /* On small screens, make radio pills full width stacking nicely */
+      .radio-row { grid-template-columns: 1fr; }
+      .radio-pill.span-two { grid-column: auto; }
     }
 
     @media(min-width:980px){
@@ -187,17 +202,16 @@
     </div>
 
     <div class="card report-card" role="region" aria-label="Choose report type">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div class="section-title">Choose Report Type</div>
-          <div class="section-sub">Select the object you want to report — options will change accordingly.</div>
-        </div>
+      <div>
+        <div class="section-title">Choose Report Type</div>
+        <div class="section-sub">Select the object you want to report — options will change accordingly.</div>
       </div>
 
       <div class="radio-row" role="radiogroup" aria-label="Report type">
         <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
         <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
-        <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
+        <!-- Post spans full width of the grid -->
+        <label class="radio-pill span-two"><input type="radio" name="rtype" value="post"> Post</label>
       </div>
 
       <div class="target" style="margin-top:14px;">
