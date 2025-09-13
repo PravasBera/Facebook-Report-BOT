@@ -8,73 +8,95 @@
   <style>
     :root{
       --blue:#1869ff;
-      --muted:#6b7280;
+      --muted:#9aa3b2;
       --card:#ffffff;
-      --bg:#f4f7fb;
+      --bg:#0f1724;            /* darker overall background for the header effect */
+      --page-bg:#f4f7fb;       /* page card background */
       --accent:#ff4d4f;
       --soft:#eef4ff;
       --radius:14px;
-      --shadow: 0 8px 28px rgba(14,35,80,0.08);
+      --header-title-grad: linear-gradient(90deg,#ff5f5f 0%, #ff3db8 50%, #7a5bff 100%);
     }
     *{box-sizing:border-box}
     body{
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background:var(--bg);
+      background:var(--page-bg);
       margin:0; padding:18px;
       color:#0f1724;
       display:flex; flex-direction:column; min-height:100vh;
     }
 
-    /* Header big, centered content */
-    .header {
-      background: linear-gradient(90deg,#1e63ff 0%, #2ea0ff 100%);
-      color:white; border-radius:18px; padding:26px;
-      display:flex; gap:18px; align-items:center; justify-content:space-between;
-      box-shadow:var(--shadow);
+    /* NEW: Big dark header that looks like the screenshot */
+    .header-wrap {
+      background: #071025;            /* very dark blue/near black */
+      border-radius:18px;
+      padding:28px;
       margin-bottom:18px;
+      color:#dbeafe;
+      box-shadow: 0 14px 40px rgba(2,6,23,0.6);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
     }
-    .hdr-left { display:flex; gap:18px; align-items:center; }
-    .logo {
-      font-size:30px; font-weight:800; letter-spacing:-0.02em;
-      line-height:1;
+    .header-title {
+      font-size:36px;
+      font-weight:900;
+      letter-spacing: -0.01em;
+      margin:0 0 8px 0;
+      /* gradient colored title */
+      background: var(--header-title-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      text-shadow: 0 6px 24px rgba(0,0,0,0.45);
     }
-    .hdr-meta {
-      display:flex; flex-direction:column; gap:6px;
+    .header-meta {
+      font-size:15px;
+      color: #9fb4d3;
+      margin-top:6px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:center;
     }
-    .meta-line{ font-size:14px; opacity:0.95; }
-    .meta-line strong{ color:#fff; font-weight:800; }
-    .team {
-      background: rgba(255,255,255,0.08);
-      display:inline-block; padding:6px 10px; border-radius:10px;
-      font-weight:800; letter-spacing:0.2px; color:#fffbe6;
+    .header-meta strong { color:#fff; font-weight:800; }
+    .team-badge {
+      margin-top:10px;
+      color:#4fb0ff;
+      font-weight:900;
+      letter-spacing:0.6px;
+      font-size:16px;
     }
 
-    /* Card base */
+    /* Keep the same card style but lighter page bg */
     .card {
       background:var(--card); border-radius:var(--radius);
-      padding:18px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
+      padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
     }
 
     /* admin token */
-    .token-row { display:flex; gap:12px; align-items:center; }
+    .token-row { display:flex; gap:10px; align-items:center; }
     .token-row input[type=text] {
-      flex:1; padding:14px 16px; border-radius:12px; border:1px solid #e8eefb;
+      flex:1; padding:12px 14px; border-radius:12px; border:1px solid #e8eefb;
       background:#fbfdff; font-weight:600; color:#0b1220;
     }
     .btn { cursor:pointer; border:0; padding:10px 16px; border-radius:12px; font-weight:700; }
-    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; border-radius:12px; }
-    .btn-primary { background:var(--blue); color:white; padding:10px 16px; border-radius:12px; }
+    .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; }
+    .btn-primary { background:var(--blue); color:white; }
 
     /* Choose report type big card */
     .report-card { padding:18px; border-radius:16px; display:block; }
-    .section-title { font-size:20px; font-weight:800; margin-bottom:6px; }
+    .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
 
     .radio-row { display:flex; gap:12px; margin-top:6px; flex-wrap:wrap; }
     .radio-pill {
       display:flex; align-items:center; gap:10px;
       padding:12px 18px; border-radius:999px; background:var(--soft);
-      border:1px solid transparent; font-weight:800; color:#0b1220;
+      border:1px solid transparent; font-weight:700; color:#0b1220;
       min-width:110px; justify-content:center;
     }
     .radio-pill input{ transform:scale(1.05); margin-right:8px; }
@@ -98,46 +120,55 @@
     .controls .file-row input[type=file]{ flex:0 0 auto; }
     .controls .buttons { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
     .btn-upload { background:transparent; border:1px solid #dfefff; color:var(--blue); padding:12px 18px; border-radius:14px; font-weight:800; }
-    /* Big Start/Stop */
     .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
     .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
 
-    /* live logs big */
-    .logs-card { padding:18px; border-radius:16px; }
-    .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; }
-    pre{ background:#071421; color:#86ffb0; padding:20px; border-radius:12px; max-height:360px; overflow:auto; font-family:monospace; font-size:14px; }
+    /* NEW: bigger live logs appearance (as requested) */
+    .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); }
+    .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; color:#f1d4ff; }
+    .log-title .autoscroll { color:#d7b1ff; display:flex; gap:8px; align-items:center; font-weight:700; }
 
-    /* footer */
+    pre.log-area{
+      background:#000;
+      color:#66ff99;
+      padding:22px;
+      border-radius:12px;
+      height:520px;            /* much larger height */
+      overflow:auto;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size:15px;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 6px 20px rgba(0,0,0,0.6);
+    }
+
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
 
-    /* small helper */
     .small { color:var(--muted); font-size:13px; }
 
-    /* responsive tweaks */
-    @media(min-width:900px){
+    @media(min-width:980px){
       body { padding:32px; }
-      .header { padding:28px; }
-      .logo { font-size:38px; }
-      .card { padding:22px; }
-      pre{ max-height:420px; }
+      .header-wrap { padding:36px; border-radius:20px; }
+      .header-title { font-size:48px; }
+      .log-area{ height:640px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <div class="header" role="banner">
-    <div class="hdr-left">
-      <div class="logo">⚡ Facebook Automation Tool ⚡</div>
-      <div class="hdr-meta" aria-hidden="false">
-        <div class="meta-line">👤 Author: <strong>PRAVAS BERA</strong> &nbsp;|&nbsp; 🌍 Version: <strong>Premium</strong> &nbsp;|&nbsp; 🇮🇳 Country: <strong>INDIA</strong></div>
-        <div><span class="team">🔥 INDIAN DANGER OF BULLET TEAM 🔥</span></div>
-      </div>
+  <!-- NEW header (dark, big gradient title, team badge) -->
+  <div class="header-wrap" role="banner">
+    <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
+    <div class="header-meta">
+      <div>👤 Author: <strong>PRAVAS BERA</strong></div>
+      <div>|</div>
+      <div>🌍 Version: <strong>Premium</strong></div>
+      <div>|</div>
+      <div>🇮🇳 Country: <strong>INDIA</strong></div>
     </div>
-    <!-- intentionally no right bubble (clean header) -->
+    <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
   </div>
 
-  <!-- Admin token -->
+  <!-- Admin token (same) -->
   <div class="card" aria-labelledby="token-label">
     <label id="token-label" style="font-weight:800; display:block; margin-bottom:8px;">Enter Admin Token here (x-admin-token)</label>
     <div class="token-row">
@@ -146,7 +177,7 @@
     </div>
   </div>
 
-  <!-- Choose Report Type card -->
+  <!-- unchanged: Report type -->
   <div class="card report-card" role="region" aria-label="Choose report type">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div>
@@ -169,7 +200,7 @@
     <div id="optionsBox" class="options-list" aria-live="polite"></div>
   </div>
 
-  <!-- Cookies and controls -->
+  <!-- Cookies and controls (unchanged) -->
   <div class="card" role="region" aria-label="Cookies and controls">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
@@ -189,19 +220,20 @@
     </div>
   </div>
 
-  <!-- Live logs -->
-  <div class="card logs-card" role="region" aria-label="Live logs">
+  <!-- BIG Live logs (only this and header changed as requested) -->
+  <div class="logs-card" role="region" aria-label="Live logs">
     <div class="log-title">
-      <div>Live Logs</div>
-      <div class="small">Selected: <strong id="selectedCount">0</strong></div>
+      <div>Live Log</div>
+      <div class="autoscroll"><input id="autoScroll" type="checkbox" checked /> <label for="autoScroll">Auto-scroll</label></div>
     </div>
-    <pre id="logArea" aria-live="polite">No logs yet.</pre>
+
+    <pre id="logArea" class="log-area" aria-live="polite">No logs yet.</pre>
   </div>
 
   <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
-  // Option sets
+  // Option sets (same)
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
@@ -214,7 +246,8 @@
   const startBtn=document.getElementById('startBtn');
   const stopBtn=document.getElementById('stopBtn');
   const logArea=document.getElementById('logArea');
-  const selectedCount=document.getElementById('selectedCount');
+  const autoScroll = document.getElementById('autoScroll');
+  const selectedCount = document.getElementById('selectedCount') || null;
   let currentJobId=null; let eventSource=null; let cookiesText=null;
 
   function renderOptions(type){
@@ -234,6 +267,7 @@
     updateSelectedCount();
   }
   function updateSelectedCount(){
+    if(!selectedCount) return;
     const sel=optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
     selectedCount.textContent=sel;
   }
@@ -262,10 +296,11 @@
     const payload={ type,target,options,cookies:cookiesText };
     try{
       const res=await fetch('/report',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':adminToken}, body:JSON.stringify(payload)});
-      const data = await (res.headers.get('content-type')||'').includes('application/json') ? await res.json().catch(()=>({ok:false})) : { ok:false };
+      const ct = res.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await res.json().catch(()=>({ok:false})) : { ok:false };
       if(!data.ok){ alert('Server error: '+(data.message||'unknown')); return; }
       currentJobId=data.jobId || ('job-'+Date.now());
-      logArea.textContent='Job accepted: '+currentJobId+'\\n';
+      log(`Job accepted: ${currentJobId}`);
       connectLogs(currentJobId);
     }catch(e){ alert('Network error: '+e.message); }
   };
@@ -274,22 +309,29 @@
     if(!currentJobId){ alert('No job running'); return; }
     try{
       await fetch('/stop',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':localStorage.getItem('adminToken')||''}, body:JSON.stringify({jobId:currentJobId})});
-      logArea.textContent+= '\\nSTOP requested for '+currentJobId+'\\n';
-    }catch(e){ logArea.textContent+= '\\nSTOP request failed: '+e.message+'\\n'; }
+      log(`STOP requested for ${currentJobId}`);
+    }catch(e){ log(`STOP request failed: ${e.message}`); }
     disconnectLogs();
   };
 
+  function log(msg){
+    const now = new Date().toLocaleTimeString();
+    logArea.textContent += `[${now}] ${msg}\n`;
+    if(autoScroll && autoScroll.checked){
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+  }
+
   function connectLogs(jobId){
     disconnectLogs();
-    // Try Server-Sent Events path if server implements it
     try{
       eventSource=new EventSource('/events/'+encodeURIComponent(jobId));
-      eventSource.onmessage=(e)=>{ logArea.textContent+=e.data+'\\n'; logArea.scrollTop=logArea.scrollHeight; };
-      eventSource.onerror=(e)=>{ logArea.textContent+='\\n[stream closed]\\n'; eventSource.close(); eventSource=null; };
+      eventSource.onmessage=(e)=>{ log(e.data); };
+      eventSource.onerror=(e)=>{ log('[stream closed]'); eventSource.close(); eventSource=null; };
+      log('[EventSource connected]');
     }catch(err){
-      // fallback: polling
-      logArea.textContent+='\\n[EventSource not available — using polling]\\n';
-      let last=0;
+      log('[EventSource not available — polling fallback]');
+      let last = 0;
       eventSource = { closed:false, timer:null };
       async function poll(){
         if(eventSource.closed) return;
@@ -298,8 +340,7 @@
           if(r.ok){
             const txt=await r.text();
             if(txt){
-              logArea.textContent+=txt+'\\n';
-              logArea.scrollTop=logArea.scrollHeight;
+              log(txt.trim());
               last = Date.now();
             }
           }
@@ -316,6 +357,9 @@
     }
     currentJobId=null;
   }
+
+  // small initial message to show bigger log looks correct
+  log('Welcome — log pane ready.');
 </script>
 </body>
 </html>
