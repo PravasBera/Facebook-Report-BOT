@@ -10,8 +10,7 @@
       --blue:#1869ff;
       --muted:#9aa3b2;
       --card:#ffffff;
-      --bg:#0f1724;            /* darker overall background for the header effect */
-      --page-bg:#f4f7fb;       /* page card background */
+      --page-bg:#f4f7fb;
       --accent:#ff4d4f;
       --soft:#eef4ff;
       --radius:14px;
@@ -26,9 +25,9 @@
       display:flex; flex-direction:column; min-height:100vh;
     }
 
-    /* NEW: Big dark header that looks like the screenshot */
+    /* Header: big dark gradient title */
     .header-wrap {
-      background: #071025;            /* very dark blue/near black */
+      background: #071025;
       border-radius:18px;
       padding:28px;
       margin-bottom:18px;
@@ -44,7 +43,6 @@
       font-weight:900;
       letter-spacing: -0.01em;
       margin:0 0 8px 0;
-      /* gradient colored title */
       background: var(--header-title-grad);
       -webkit-background-clip: text;
       background-clip: text;
@@ -71,7 +69,7 @@
       font-size:16px;
     }
 
-    /* Keep the same card style but lighter page bg */
+    /* Card style */
     .card {
       background:var(--card); border-radius:var(--radius);
       padding:16px; box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom:16px;
@@ -87,7 +85,7 @@
     .btn-ghost { background:transparent; border:1px solid #cfe0ff; color:var(--blue); padding:10px 14px; }
     .btn-primary { background:var(--blue); color:white; }
 
-    /* Choose report type big card */
+    /* Choose report type */
     .report-card { padding:18px; border-radius:16px; display:block; }
     .section-title { font-size:18px; font-weight:800; margin-bottom:6px; }
     .section-sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
@@ -114,7 +112,7 @@
     }
     .option-item input{ width:20px; height:20px; transform:scale(1.05); }
 
-    /* Controls big */
+    /* Controls */
     .controls { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
     .controls .file-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
     .controls .file-row input[type=file]{ flex:0 0 auto; }
@@ -123,7 +121,7 @@
     .btn-start { background:var(--blue); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 14px 36px rgba(24,105,255,0.14); }
     .btn-stop { background:var(--accent); color:#fff; padding:14px 30px; border-radius:16px; font-size:16px; box-shadow:0 12px 28px rgba(255,77,79,0.12); }
 
-    /* NEW: bigger live logs appearance (as requested) */
+    /* BIG Live logs */
     .logs-card { padding:22px; border-radius:16px; background: linear-gradient(180deg,#0b1a25,#07121a); color:#cbeee0; box-shadow: 0 14px 40px rgba(2,6,23,0.45); }
     .log-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-weight:800; font-size:18px; color:#f1d4ff; }
     .log-title .autoscroll { color:#d7b1ff; display:flex; gap:8px; align-items:center; font-weight:700; }
@@ -133,12 +131,13 @@
       color:#66ff99;
       padding:22px;
       border-radius:12px;
-      height:520px;            /* much larger height */
+      height:520px;
       overflow:auto;
       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
       font-size:15px;
       border: 1px solid rgba(255,255,255,0.04);
       box-shadow: inset 0 6px 20px rgba(0,0,0,0.6);
+      white-space:pre-wrap;
     }
 
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
@@ -155,20 +154,20 @@
 </head>
 <body>
 
-  <!-- NEW header (dark, big gradient title, team badge) -->
-  <div class="header-wrap" role="banner">
+  <!-- FINAL header -->
+  <div class="header-wrap" role="banner" aria-label="Application header">
     <div class="header-title">⚡ Facebook Automation Tool ⚡</div>
-    <div class="header-meta">
-      <div>👤 Author: <strong>PRAVAS BERA</strong></div>
-      <div>|</div>
-      <div>🌍 Version: <strong>Premium</strong></div>
-      <div>|</div>
-      <div>🇮🇳 Country: <strong>INDIA</strong></div>
+    <div class="header-meta" role="list">
+      <div role="listitem">👤 Author: <strong>PRAVAS BERA</strong></div>
+      <div role="separator">|</div>
+      <div role="listitem">🌍 Version: <strong>Premium</strong></div>
+      <div role="separator">|</div>
+      <div role="listitem">🇮🇳 Country: <strong>INDIA</strong></div>
     </div>
     <div class="team-badge">🔥 INDIAN DANGER OF BULLET TEAM 🔥</div>
   </div>
 
-  <!-- Admin token (same) -->
+  <!-- Admin token -->
   <div class="card" aria-labelledby="token-label">
     <label id="token-label" style="font-weight:800; display:block; margin-bottom:8px;">Enter Admin Token here (x-admin-token)</label>
     <div class="token-row">
@@ -177,7 +176,7 @@
     </div>
   </div>
 
-  <!-- unchanged: Report type -->
+  <!-- Report type -->
   <div class="card report-card" role="region" aria-label="Choose report type">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div>
@@ -187,7 +186,7 @@
     </div>
 
     <div class="radio-row" role="radiogroup" aria-label="Report type">
-      <label class="radio-pill" aria-checked="true"><input type="radio" name="rtype" value="profile" checked> Profile</label>
+      <label class="radio-pill"><input type="radio" name="rtype" value="profile" checked> Profile</label>
       <label class="radio-pill"><input type="radio" name="rtype" value="page"> Page</label>
       <label class="radio-pill"><input type="radio" name="rtype" value="post"> Post</label>
     </div>
@@ -200,7 +199,7 @@
     <div id="optionsBox" class="options-list" aria-live="polite"></div>
   </div>
 
-  <!-- Cookies and controls (unchanged) -->
+  <!-- Cookies and controls -->
   <div class="card" role="region" aria-label="Cookies and controls">
     <div style="display:flex; justify-content:space-between; align-items:center;">
       <div style="font-weight:800; font-size:16px;">Cookies & Controls</div>
@@ -220,7 +219,7 @@
     </div>
   </div>
 
-  <!-- BIG Live logs (only this and header changed as requested) -->
+  <!-- BIG Live logs -->
   <div class="logs-card" role="region" aria-label="Live logs">
     <div class="log-title">
       <div>Live Log</div>
@@ -233,7 +232,7 @@
   <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
 
 <script>
-  // Option sets (same)
+  // Option sets
   const OPTION_SETS = {
     profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
     page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
@@ -247,7 +246,6 @@
   const stopBtn=document.getElementById('stopBtn');
   const logArea=document.getElementById('logArea');
   const autoScroll = document.getElementById('autoScroll');
-  const selectedCount = document.getElementById('selectedCount') || null;
   let currentJobId=null; let eventSource=null; let cookiesText=null;
 
   function renderOptions(type){
@@ -263,13 +261,7 @@
   }
   function attachOptionListeners(){
     const checkboxes=optionsBox.querySelectorAll('input[type=checkbox]');
-    checkboxes.forEach(ch=>ch.onchange=updateSelectedCount);
-    updateSelectedCount();
-  }
-  function updateSelectedCount(){
-    if(!selectedCount) return;
-    const sel=optionsBox.querySelectorAll('input[type=checkbox]:checked').length;
-    selectedCount.textContent=sel;
+    checkboxes.forEach(ch=>ch.onchange=()=>{/* no selected count in final UI */});
   }
 
   document.querySelectorAll('input[name=rtype]').forEach(el=>{
@@ -285,6 +277,14 @@
     const text=await f.text(); cookiesText=text.trim();
     alert('cookies loaded: '+(cookiesText.split('\\n').length)+' lines');
   };
+
+  function log(msg){
+    const now = new Date().toLocaleTimeString();
+    logArea.textContent += `[${now}] ${msg}\n`;
+    if(autoScroll && autoScroll.checked){
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+  }
 
   startBtn.onclick=async()=>{
     const adminToken=adminInput.value.trim();
@@ -313,14 +313,6 @@
     }catch(e){ log(`STOP request failed: ${e.message}`); }
     disconnectLogs();
   };
-
-  function log(msg){
-    const now = new Date().toLocaleTimeString();
-    logArea.textContent += `[${now}] ${msg}\n`;
-    if(autoScroll && autoScroll.checked){
-      logArea.scrollTop = logArea.scrollHeight;
-    }
-  }
 
   function connectLogs(jobId){
     disconnectLogs();
@@ -358,7 +350,7 @@
     currentJobId=null;
   }
 
-  // small initial message to show bigger log looks correct
+  // initial message
   log('Welcome — log pane ready.');
 </script>
 </body>
