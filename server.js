@@ -351,14 +351,26 @@ async function reportRunner(sessionId, opts = {}) {
 
         page = await browser.newPage();
         sess.pages.push(page);
+        // <-- ADD THESE 3 LINES IMMEDIATELY AFTER newPage()
+        global.page = page; // expose current page for debug endpoints
+        simpleLog('page-created-for-account', accId);
+        
         await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
 
         // prepare context before setting cookies
         await page.goto('https://www.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
         await page.setCookie(...cookies);
 
+      
         // goto target
         await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        // log current url for debug (will show in render logs)
+        try {
+          const curUrl = await page.url();
+          simpleLog('Page navigated', { account: accId, url: curUrl });
+          sseSend(sessionId, 'info', { msg: 'page-url', url: curUrl });
+        } catch(e) { simpleLog('page-url-error', e && e.message); }
+
         await page.waitForTimeout(1200 + Math.floor(Math.random() * 800));
 
         const ACCOUNT_TIMEOUT_MS = Math.max(30_000, parseInt(process.env.ACCOUNT_TIMEOUT_MS || '90000', 10));
@@ -369,12 +381,15 @@ async function reportRunner(sessionId, opts = {}) {
 
         sseSend(sessionId, 'success', { account: accId, msg: 'Flow completed' });
 
+        // after successful flow complete
         try { await page.close(); } catch (e) {}
         sess.pages = sess.pages.filter(p => p !== page);
+        global.page = null;
       } catch (err) {
         sseSend(sessionId, 'error', { account: accId, error: err && err.message ? err.message : String(err) });
         try { if (page && !page.isClosed()) await page.close(); } catch (e) {}
         sess.pages = sess.pages.filter(p => p !== page);
+        global.page = null;
       }
 
       sinceRestart++;
@@ -394,6 +409,33 @@ async function reportRunner(sessionId, opts = {}) {
 }
 
 // --- API routes ---
+
+// --- Debug endpoints (admin only) ---
+// GET /debug-screenshot  => returns PNG of current page
+app.get('/debug-screenshot', requireAdmin, async (req, res) => {
+  if (!global.page) return res.status(400).send('No active page');
+  try {
+    const buf = await global.page.screenshot({ fullPage: false });
+    res.set('Content-Type', 'image/png');
+    res.send(buf);
+  } catch (e) {
+    simpleLog('debug-screenshot-error', e && e.message);
+    res.status(500).send('Screenshot error: ' + (e && e.message || 'err'));
+  }
+});
+
+// GET /debug-html => returns current page HTML (plain text)
+app.get('/debug-html', requireAdmin, async (req, res) => {
+  if (!global.page) return res.status(400).send('No active page');
+  try {
+    const html = await global.page.content();
+    res.set('Content-Type', 'text/plain; charset=utf-8');
+    res.send(html);
+  } catch (e) {
+    simpleLog('debug-html-error', e && e.message);
+    res.status(500).send('HTML error: ' + (e && e.message || 'err'));
+  }
+});
 
 // Expose flows
 app.get('/flows', (req, res) => { res.json(flows); });
