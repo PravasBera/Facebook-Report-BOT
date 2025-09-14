@@ -428,11 +428,29 @@ app.get('/flows', (req, res) => res.json(flows));
 app.get('/events', (req, res) => {
   const sid = req.query.sessionId || 'default';
   const sess = getSession(sid);
-  res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    // optional: disable buffering proxies
+    'X-Accel-Buffering': 'no'
+  });
   res.flushHeaders();
+
+  // send ready
   res.write(`event: ready\ndata: ${JSON.stringify({ msg: 'SSE connected', sessionId: sid })}\n\n`);
   sess.clients.add(res);
-  req.on('close', () => { sess.clients.delete(res); });
+
+  // keepalive ping every 15s (comment line)
+  const ka = setInterval(() => {
+    try { res.write(':\n\n'); } catch (e) { /* ignore */ }
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(ka);
+    sess.clients.delete(res);
+  });
 });
 
 // uploadCookies (multipart OR json text)
