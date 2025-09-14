@@ -109,34 +109,28 @@ const DEFAULT_LAUNCH_ARGS = [
 
 // launch wrapper using resolver; respects env PUPPETEER_HEADLESS
 async function launchBrowserWithFallback(opts = {}) {
-  const execPath = await resolveExecutablePath();
-
-  // headless config: accept 'new'|'true'|'false' from env, else default true
-  let headlessEnv = process.env.PUPPETEER_HEADLESS;
-  let headless = true;
-  if (headlessEnv && String(headlessEnv).toLowerCase() === 'new') headless = 'new';
-  else if (headlessEnv && String(headlessEnv).toLowerCase() === 'false') headless = false;
-  else if (headlessEnv && String(headlessEnv).toLowerCase() === 'true') headless = true;
-  else headless = opts.headless === undefined ? true : !!opts.headless;
+  const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROMIUM_PATH || await resolveExecutablePath();
 
   const launchOpts = {
-    headless,
-    args: (opts.args || []).concat(DEFAULT_LAUNCH_ARGS),
+    headless: 'new',
+    executablePath: execPath || undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+    ].concat(opts.args || []),
     defaultViewport: opts.defaultViewport || { width: 390, height: 844 },
     ignoreHTTPSErrors: true
   };
 
-  if (execPath) {
-    launchOpts.executablePath = execPath;
-    simpleLog('Launching chromium from', execPath, 'headless=', headless);
-  } else {
-    simpleLog('No chromium exec found via resolver; trying puppeteer default — may fail if using puppeteer-core without CHROMIUM_PATH');
-  }
-
+  simpleLog('Launching chromium from', execPath || 'puppeteer default');
   try {
     return await puppeteerPkg.launch(launchOpts);
   } catch (err) {
-    simpleLog('puppeteer.launch failed:', err && err.message);
+    simpleLog('puppeeter.launch failed:', err && err.message);
     throw err;
   }
 }
