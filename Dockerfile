@@ -1,10 +1,12 @@
 FROM node:20-bullseye-slim
 
 # Install Chromium and deps
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     ca-certificates \
     fonts-liberation \
+    libnss3 \
+    libxss1 \
     libasound2 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -13,25 +15,23 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libxcomposite1 \
     libxdamage1 \
-    libxfixes3 \
     libxrandr2 \
     libgbm1 \
     libgtk-3-0 \
     wget \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm install --production
+RUN npm ci --production || npm install --production
 
 COPY . .
 
 # tell puppeteer where chromium is
-ENV CHROMIUM_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-ENV PORT=10000
 EXPOSE 10000
 
 CMD ["node", "server.js"]
