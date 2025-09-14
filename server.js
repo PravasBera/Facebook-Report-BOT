@@ -109,19 +109,26 @@ const DEFAULT_LAUNCH_ARGS = [
 ];
 
 async function launchBrowserWithFallback(opts = {}) {
-  const execPath = await resolveExecutablePath();
+  const execPath = process.env.CHROMIUM_PATH || '/usr/bin/chromium';
+
   const launchOpts = {
-    headless: opts.headless === undefined ? true : !!opts.headless,
-    args: (opts.args || []).concat(DEFAULT_LAUNCH_ARGS),
+    headless: 'new', // Render/Docker এ নতুন flag
+    executablePath: execPath,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+      '--headless=new'
+    ],
     defaultViewport: opts.defaultViewport || { width: 390, height: 844 },
     ignoreHTTPSErrors: true
   };
-  if (execPath) {
-    launchOpts.executablePath = execPath;
-    simpleLog('Launching chromium from path', execPath);
-  } else {
-    simpleLog('No explicit chromium executable found; trying puppeteer defaults (may fail if using puppeteer-core without CHROMIUM_PATH)');
-  }
+
+  simpleLog('Launching chromium from path', execPath);
+
   return await puppeteerPkg.launch(launchOpts);
 }
 
