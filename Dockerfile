@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm ci --production
+RUN npm install --production
 
 COPY . .
 
