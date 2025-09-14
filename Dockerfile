@@ -11,15 +11,17 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 # copy package files first for faster rebuilds
-COPY package.json package-lock.json ./
-RUN npm ci --production
+COPY package*.json ./
+RUN npm install --production
 
+# copy rest of the files
 COPY . .
 
-# tell server where chromium is
+# tell puppeteer where chromium is
 ENV CHROMIUM_PATH=/usr/bin/chromium
 
-ENV PORT=3000
-EXPOSE 3000
+# render will inject PORT, use it
+ENV PORT=10000
+EXPOSE 10000
 
-CMD ["node","server.js"]
+CMD ["node", "server.js"]
