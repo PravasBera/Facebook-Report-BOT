@@ -266,6 +266,7 @@
   let cookiesText = null;
   let currentJobId = null;
   let eventSource = null;
+let retryDelay = 1000;
 /* --- OPTION SETS + renderer (পেস্ট করে রাখো script এর উপরে যত তাড়াতাড়ি সম্ভব) --- */
 const OPTION_SETS = {
   profile: [
@@ -449,60 +450,122 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // SSE connect (server route expects /events?sessionId=...)
-  function connectLogs(sessionId) {
-    disconnectLogs();
-    try {
-      eventSource = new EventSource('/events?sessionId=' + encodeURIComponent(sessionId));
-      eventSource.onopen = () => log('SSE connected');
-      eventSource.onmessage = (e) => {
-        // default message events
-        let txt = e.data;
-        // sometimes server sends JSON payloads -> try parse for nicer display
-        try {
-          const p = JSON.parse(e.data);
-          txt = (typeof p === 'string' ? p : JSON.stringify(p));
-        } catch(_) {}
-        log(txt);
-      };
-      // also listen to named events if server sends them:
-      eventSource.addEventListener('info', (e) => { try { log('[info] ' + e.data); } catch(_){} });
-      eventSource.addEventListener('error', (e) => { log('[SSE error]'); });
-      eventSource.onerror = (e) => { log('[stream closed]'); try{ eventSource.close(); }catch(_){} eventSource=null; };
-    } catch (err) {
-      log('[EventSource not available — polling fallback]');
-      // fallback: simple polling endpoint (if server implements /status or /logs)
-      let last = 0;
-      eventSource = { closed:false, timer:null };
-      async function poll(){
-        if (eventSource.closed) return;
-        try {
-          const r = await fetch('/status', {
-            method: 'GET',
-            headers: { 'x-admin-token': localStorage.getItem('adminToken') || '' }
-          });
-          if (r.ok) {
-            const j = await r.json().catch(()=>null);
-            if (j && Array.isArray(j.logs)) {
-              for (const l of j.logs) log(l);
-            }
-          }
-        } catch (e){}
-        eventSource.timer = setTimeout(poll, 2000);
-      }
-      poll();
-    }
-  }
 
-  function disconnectLogs(){
-    if (eventSource) {
-      try { if (eventSource.close) eventSource.close(); if (eventSource.timer) clearTimeout(eventSource.timer); } catch(e){}
-      eventSource = null;
+function connectLogs(sessionId) {
+  // close any old connection
+  disconnectLogs();
+
+  try {
+    // If your server does require admin token for events, append it here:
+    // const adminToken = localStorage.getItem('adminToken') || '';
+    // const url = '/events?sessionId=' + encodeURIComponent(sessionId) + '&adminToken=' + encodeURIComponent(adminToken);
+    const url = '/events?sessionId=' + encodeURIComponent(sessionId);
+
+    eventSource = new EventSource(url);
+
+    eventSource.onopen = () => {
+      log('SSE connected');
+      retryDelay = 1000;
+      // UI: mark job running
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    // generic message (server may send default messages)
+    eventSource.onmessage = (e) => {
+      let txt = e.data;
+      try {
+        const p = JSON.parse(e.data);
+        // if server sends structured payload, pretty print important bits
+        if (p && typeof p === 'object') {
+          // try human readable
+          if (p.msg && p.account) txt = `[${p.msg}] account=${p.account}`;
+          else txt = JSON.stringify(p);
+        }
+      } catch(_) {}
+      log(txt);
+    };
+
+    // named events that server may emit -- handle them explicitly
+    eventSource.addEventListener('log', (e) => { try { log(e.data); } catch(_){} });
+    eventSource.addEventListener('info', (e) => { try { log('[info] ' + e.data); } catch(_){} });
+    eventSource.addEventListener('warn', (e) => { try { log('[warn] ' + e.data); } catch(_){} });
+    eventSource.addEventListener('error', (e) => { try { log('[server-error] ' + e.data); } catch(_){} });
+
+    // success/done/fatal for run lifecycle
+    eventSource.addEventListener('success', (e) => { try { log('[success] ' + e.data); } catch(_){} });
+    eventSource.addEventListener('done', (e) => {
+      try {
+        log('[done] ' + e.data);
+      } catch(_) {}
+      // job finished — cleanup UI
+      disconnectLogs();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+    eventSource.addEventListener('fatal', (e) => {
+      try { log('[fatal] ' + e.data); } catch(_) {}
+      disconnectLogs();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+
+    eventSource.onerror = (e) => {
+      // server closed stream or network error
+      log('[SSE error] stream closed or network error');
+      try { eventSource.close(); } catch(_) {}
+      // exponential backoff reconnect (only if we still have a currentJobId)
+      if (currentJobId) {
+        setTimeout(() => {
+          log(`[SSE] reconnecting (delay ${retryDelay}ms)`);
+          connectLogs(currentJobId);
+          retryDelay = Math.min(30000, Math.floor(retryDelay * 1.8));
+        }, retryDelay);
+      } else {
+        // no job active: ensure UI unlocked
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    };
+  } catch (err) {
+    log('[EventSource not available — using polling fallback]');
+    // fallback polling
+    eventSource = { closed:false, timer:null };
+    async function poll(){
+      if (eventSource.closed) return;
+      try {
+        const r = await fetch('/status', {
+          headers: { 'x-admin-token': localStorage.getItem('adminToken') || '' }
+        });
+        if (r.ok) {
+          const j = await r.json().catch(()=>null);
+          if (j && Array.isArray(j.logs)) {
+            for (const l of j.logs) log(l);
+          }
+        }
+      } catch (e) {}
+      eventSource.timer = setTimeout(poll, 2000);
     }
-    currentJobId = null;
+    poll();
   }
+}
+
+function disconnectLogs(){
+  if (eventSource) {
+    try {
+      if (eventSource.close) eventSource.close();
+      if (eventSource.timer) clearTimeout(eventSource.timer);
+    } catch(e){}
+    eventSource = null;
+  }
+  currentJobId = null;
+  // UI buttons
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+}
 
   // initial message
-  log('UI ready — connect to server and upload cookies before starting.');
+  log('WELCOME KING 👑 YOUR BRAHMARSTA IS READY.');
 </script>
 </body>
 </html>
