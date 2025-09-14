@@ -206,7 +206,10 @@ function loadCookieAccounts() {
   const cookieTxt = path.join(UPLOAD_DIR, 'cookies.txt');
   try {
     if (fs.existsSync(cookieTxt)) {
-      const lines = fs.readFileSync(cookieTxt, 'utf-8').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const lines = fs.readFileSync(cookieTxt, 'utf-8')
+  .split(/\r?\n|\r|\n/g)   // সব ধরণের newline কভার করবে
+  .map(l => l.trim())
+  .filter(Boolean);
       for (const l of lines) {
         const parsed = parseRawCookieLine(l);
         if (parsed) out.push(parsed);
