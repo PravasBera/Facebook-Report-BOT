@@ -266,7 +266,56 @@
   let cookiesText = null;
   let currentJobId = null;
   let eventSource = null;
+/* --- OPTION SETS + renderer (পেস্ট করে রাখো script এর উপরে যত তাড়াতাড়ি সম্ভব) --- */
+const OPTION_SETS = {
+  profile: [
+    'Problem involving someone under 18',
+    'Bullying, harassment or abuse',
+    'Violent, hateful or disturbing content',
+    'Adult content',
+    'Fake profile'
+  ],
+  page: [
+    'Problem involving someone under 18',
+    'Bullying, harassment or abuse',
+    'Violent, hateful or disturbing content',
+    'Adult content',
+    'Fake page'
+  ],
+  post: [
+    'Problem involving someone under 18',
+    'Bullying, harassment or abuse',
+    'Violent, hateful or disturbing content',
+    'Adult content'
+  ]
+};
 
+function renderOptions(type){
+  const optionsBox = document.getElementById('optionsBox');
+  if(!optionsBox) return console.warn('No #optionsBox found in DOM');
+  optionsBox.innerHTML = '';
+  (OPTION_SETS[type] || []).forEach((opt, i) => {
+    const id = `${type}-opt-${i}`;
+    const div = document.createElement('div');
+    div.className = 'option-item';
+    div.innerHTML = `<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
+    optionsBox.appendChild(div);
+  });
+}
+
+/* bind radios (safety: run after DOM available) */
+window.addEventListener('DOMContentLoaded', () => {
+  const radios = document.querySelectorAll('input[name=rtype]');
+  radios.forEach(r => r.addEventListener('change', () => {
+    const t = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
+    renderOptions(t);
+  }));
+  // initial render
+  const cur = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
+  renderOptions(cur);
+});
+
+  
   // helper logger
   function log(msg) {
     const now = new Date().toLocaleTimeString();
