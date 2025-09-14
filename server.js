@@ -142,13 +142,14 @@ async function launchBrowserWithFallback(opts = {}) {
  * Stores validator browser on the session object as `validatorBrowser`.
  * Returns { status: 'live'|'invalid'|'error', reason, url? }
  */
+// Replaced quickValidateCookie - fixed page.url() misuse and more robust handling
 async function quickValidateCookie(cookies, sessionId) {
   const sess = getSession(sessionId);
   const start = Date.now();
   let page = null;
   try {
-    // reuse browser if present, otherwise launch and keep in session
-    if (!sess.validatorBrowser || (sess.validatorBrowser.isConnected && !sess.validatorBrowser.process)) {
+    // ensure we have a reusable validator browser
+    if (!sess.validatorBrowser || typeof sess.validatorBrowser.isConnected !== 'function' || !sess.validatorBrowser.isConnected()) {
       try {
         sess.validatorBrowser = await launchBrowserWithFallback({
           args: ['--no-sandbox','--disable-setuid-sandbox','--single-process','--shm-size=64m'],
@@ -165,78 +166,78 @@ async function quickValidateCookie(cookies, sessionId) {
     page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
 
-    // Nav to mobile site so cookies with .facebook.com domain have expected origin
     await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
 
-    // Try to set cookies - if some cookies invalid, filter to safe subset
-    let safeCookies = Array.isArray(cookies) ? cookies.slice(0, 100) : [];
-    // ensure domain/path exist for puppeteer setCookie
+    // prepare cookie objects (limit to avoid huge sets)
+    let safeCookies = Array.isArray(cookies) ? cookies.slice(0, 200) : [];
     safeCookies = safeCookies.map(c => Object.assign({ domain: '.facebook.com', path: '/', httpOnly:false, secure:true }, c));
 
     try {
       await page.setCookie(...safeCookies);
     } catch (e) {
-      // fallback: try set cookies one-by-one (some cookie entries may be invalid)
+      // fallback to per-cookie set (some cookie entries might be malformed)
       sseSend(sessionId, 'log', { msg: 'bulk setCookie failed, trying per-cookie', error: e && e.message });
-      const okOnes = [];
+      const ok = [];
       for (const c of safeCookies) {
         try {
           await page.setCookie(c);
-          okOnes.push(c);
+          ok.push(c);
         } catch (ee) {
-          sseSend(sessionId, 'log', { msg:'cookie rejected', name: c.name, error: ee && ee.message });
+          sseSend(sessionId, 'log', { msg: 'cookie rejected', name: c.name, error: ee && ee.message });
         }
       }
-      if (!okOnes.length) {
-        await page.close().catch(()=>{});
-        return { status:'error', reason:'no-cookie-was-set' };
+      if (!ok.length) {
+        try { await page.close(); } catch(_) {}
+        return { status: 'error', reason: 'no-cookie-was-set' };
       }
     }
 
-    // reload so cookies apply
+    // reload so cookies take effect
     await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
     await page.waitForTimeout(900 + Math.floor(Math.random()*800));
 
-    const curUrl = await page.url().catch(()=>null);
-    const html = await page.content().catch(()=>'');
+    // page.url() is synchronous
+    let curUrl = null;
+    try { curUrl = page.url(); } catch (e) { curUrl = null; }
 
-    const lower = String(html).toLowerCase();
+    // page.content() is async - use try/catch
+    let html = '';
+    try { html = await page.content(); } catch (e) { html = ''; }
 
-    // heuristics
+    const lower = String(html || '').toLowerCase();
+
     const loginPhrases = ['log in to see posts','log in to see','log in','please log in','create new account','password','sign up'];
-    let loginDetected = loginPhrases.some(p => lower.includes(p));
-
+    const loginDetected = loginPhrases.some(p => lower.includes(p));
     const urlLogin = curUrl && (/\/login|\/checkpoint|\/recover|\/home\.php/.test(curUrl));
 
     if (loginDetected || urlLogin) {
-      sseSend(sessionId, 'log', { msg:'validator: invalid (login detected)', url: curUrl });
+      sseSend(sessionId, 'log', { msg: 'quickValidate result: invalid (login detected)', url: curUrl });
       try { await page.close(); } catch(_) {}
-      return { status:'invalid', reason:'login-prompt-or-redirect', url: curUrl };
+      return { status: 'invalid', reason: 'login-prompt-or-redirect', url: curUrl };
     }
 
-    // positive markers for logged in view
-    const positive = lower.includes('see more from') || lower.includes('profile photo') || lower.includes('friends') || /\/p\/[a-z0-9\-]+/.test(lower);
-    if (positive) {
-      sseSend(sessionId, 'log', { msg:'validator: live (profile markers found)', url: curUrl });
+    const hasProfileMarker = lower.includes('see more from') || lower.includes('profile photo') || lower.includes('friends') || /\/p\/[a-z0-9\-]+/.test(lower);
+    if (hasProfileMarker) {
+      sseSend(sessionId, 'log', { msg: 'quickValidate result: live (profile markers found)', url: curUrl });
       try { await page.close(); } catch(_) {}
-      return { status:'live', reason:'profile-markers', url: curUrl };
+      return { status: 'live', reason: 'profile-markers', url: curUrl };
     }
 
-    // fallback - if no explicit login detected consider live
-    sseSend(sessionId, 'log', { msg:'validator fallback: considered live', url: curUrl });
+    // fallback: consider live when no login detected
+    sseSend(sessionId, 'log', { msg: 'quickValidate fallback: considered live', url: curUrl });
     try { await page.close(); } catch(_) {}
-    return { status:'live', reason:'no-login-detected', url: curUrl };
+    return { status: 'live', reason: 'no-login-detected', url: curUrl };
 
   } catch (e) {
     try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
-    // if validator browser seems broken, try to close and clear it so next call will relaunch
+    // if validator browser appears broken, close and clear so next call will relaunch
     try { if (sess.validatorBrowser) { await sess.validatorBrowser.close(); } } catch(_) {}
     sess.validatorBrowser = null;
-    sseSend(sessionId, 'log', { msg:'validator error', error: e && e.message ? e.message : String(e) });
-    return { status:'error', reason: e && e.message ? e.message : String(e) };
+    sseSend(sessionId, 'log', { msg: 'quickValidate error', error: e && e.message ? e.message : String(e) });
+    return { status: 'error', reason: e && e.message ? e.message : String(e) };
   } finally {
     const took = Date.now() - start;
-    sseSend(sessionId, 'log', { msg:'quickValidate took ms', ms: took });
+    sseSend(sessionId, 'log', { msg: 'quickValidate took ms', ms: took });
   }
 }
 
@@ -753,6 +754,10 @@ async function gracefulShutdown() {
       sess.abort = true;
       for (const p of sess.pages) { try { await p.close(); } catch(e) {} }
       if (sess.browser) { try { await sess.browser.close(); } catch(e) {} }
+            // inside gracefulShutdown loop for each sess:
+if (sess.validatorBrowser) { try { await sess.validatorBrowser.close(); } catch(e) {}
+  sess.validatorBrowser = null;
+}
     } catch (e) {}
   }
   process.exit(0);
