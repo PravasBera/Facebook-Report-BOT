@@ -253,122 +253,207 @@
 
     <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
   </div>
-
 <script>
-  // Option sets
-  const OPTION_SETS = {
-    profile: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake profile'],
-    page: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content','Fake page'],
-    post: ['Problem involving someone under 18','Bullying, harassment or abuse','Violent, hateful or disturbing content','Adult content']
-  };
-
-  const adminInput=document.getElementById('adminToken');
-  const saveToken=document.getElementById('saveToken');
-  const optionsBox=document.getElementById('optionsBox');
-  const startBtn=document.getElementById('startBtn');
-  const stopBtn=document.getElementById('stopBtn');
-  const logArea=document.getElementById('logArea');
+  // UI references
+  const adminInput = document.getElementById('adminToken');
+  const saveTokenBtn = document.getElementById('saveToken');
+  const uploadBtn = document.getElementById('uploadCookies');
+  const cookiesFileInput = document.getElementById('cookiesFile');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const logArea = document.getElementById('logArea');
   const autoScroll = document.getElementById('autoScroll');
-  let currentJobId=null; let eventSource=null; let cookiesText=null;
+  let cookiesText = null;
+  let currentJobId = null;
+  let eventSource = null;
 
-  function renderOptions(type){
-    optionsBox.innerHTML='';
-    OPTION_SETS[type].forEach((opt,i)=>{
-      const id=`${type}-opt-${i}`;
-      const div=document.createElement('div');
-      div.className='option-item';
-      div.innerHTML=`<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
-      optionsBox.appendChild(div);
-    });
-  }
-
-  document.querySelectorAll('input[name=rtype]').forEach(el=>{
-    el.onchange=()=>renderOptions(document.querySelector('input[name=rtype]:checked').value);
-  });
-  renderOptions('profile');
-
-  saveToken.onclick=()=>{ localStorage.setItem('adminToken',adminInput.value.trim()); alert('Saved token'); };
-  adminInput.value=localStorage.getItem('adminToken')||'';
-
-  document.getElementById('cookiesFile').onchange=async(e)=>{
-    const f=e.target.files[0]; if(!f)return;
-    const text=await f.text(); cookiesText=text.trim();
-    alert('cookies loaded: '+(cookiesText.split('\\n').length)+' lines');
-  };
-
-  function log(msg){
+  // helper logger
+  function log(msg) {
     const now = new Date().toLocaleTimeString();
     logArea.textContent += `[${now}] ${msg}\n`;
-    if(autoScroll && autoScroll.checked){
-      logArea.scrollTop = logArea.scrollHeight;
-    }
+    if (autoScroll && autoScroll.checked) logArea.scrollTop = logArea.scrollHeight;
   }
 
-  startBtn.onclick=async()=>{
-    const adminToken=adminInput.value.trim();
-    if(!adminToken){ alert('Set admin token'); return; }
-    const type=document.querySelector('input[name=rtype]:checked').value;
-    const target=document.getElementById('target').value.trim();
-    if(!target){ alert('Set target URL/ID'); return; }
-    const options=Array.from(optionsBox.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.dataset.text);
-    const payload={ type,target,options,cookies:cookiesText };
-    try{
-      const res=await fetch('/report',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':adminToken}, body:JSON.stringify(payload)});
-      const ct = res.headers.get('content-type') || '';
-      const data = ct.includes('application/json') ? await res.json().catch(()=>({ok:false})) : { ok:false };
-      if(!data.ok){ alert('Server error: '+(data.message||'unknown')); return; }
-      currentJobId=data.jobId || ('job-'+Date.now());
-      log(`Job accepted: ${currentJobId}`);
+  // load saved token into input on page load
+  adminInput.value = localStorage.getItem('adminToken') || '';
+
+  // save token button
+  saveTokenBtn.onclick = () => {
+    const v = adminInput.value.trim();
+    if (!v) { alert('Enter admin token first'); return; }
+    localStorage.setItem('adminToken', v);
+    alert('Admin token saved');
+  };
+
+  // file input -> read cookiesText variable (not upload yet)
+  cookiesFileInput.onchange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      const text = await f.text();
+      cookiesText = text.trim();
+      const lines = cookiesText.split(/\r?\n/).map(l => l.trim()).filter(Boolean).length;
+      alert('cookies loaded locally: ' + lines + ' lines');
+      log(`Loaded cookies file locally (${lines} lines)`);
+    } catch (err) {
+      alert('Failed to read file: ' + (err.message || err));
+      log('File read error: ' + (err.message || err));
+    }
+  };
+
+  // Upload cookies to server (POST /uploadCookies with JSON { text })
+  uploadBtn.onclick = async () => {
+    if (!cookiesText) { alert('No cookies loaded in file input'); return; }
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) { alert('Set admin token first'); return; }
+
+    try {
+      log('Uploading cookies to server...');
+      const res = await fetch('/uploadCookies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ text: cookiesText })
+      });
+      const j = await res.json().catch(() => ({ ok:false, message:'Invalid JSON' }));
+      if (!j.ok) {
+        alert('Upload failed: ' + (j.error || j.message || 'Unknown'));
+        log('Upload failed: ' + (j.error || j.message || 'Unknown'));
+        return;
+      }
+      alert('Uploaded cookies.txt OK');
+      log('cookies uploaded: ' + (j.path || 'uploads/cookies.txt'));
+    } catch (e) {
+      alert('Upload error: ' + e.message);
+      log('upload error: ' + e.message);
+    }
+  };
+
+  // Start job (POST /start) — note: we create sessionId and send targetUrl + setType
+  startBtn.onclick = async () => {
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) { alert('Set admin token'); return; }
+
+    const type = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
+    const target = document.getElementById('target').value.trim();
+    if (!target) { alert('Set target URL/ID'); return; }
+
+    // session id used for SSE: server expects /events?sessionId=...
+    const sessionId = 'sess-' + Date.now();
+    const body = { sessionId, targetUrl: target, setType: type };
+
+    try {
+      log('Sending start request...');
+      const res = await fetch('/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify(body)
+      });
+      const j = await res.json().catch(()=>({ ok:false }));
+      if (!j.ok) {
+        alert('Start failed: ' + (j.message || 'unknown'));
+        log('Start failed: ' + (j.message || 'unknown'));
+        return;
+      }
+      currentJobId = sessionId;
+      log(`Job started: ${currentJobId}`);
+      // connect SSE to receive logs
       connectLogs(currentJobId);
-    }catch(e){ alert('Network error: '+e.message); }
+    } catch (e) {
+      alert('Network/start error: ' + e.message);
+      log('Start error: ' + e.message);
+    }
   };
 
-  stopBtn.onclick=async()=>{
-    if(!currentJobId){ alert('No job running'); return; }
-    try{
-      await fetch('/stop',{ method:'POST', headers:{'Content-Type':'application/json','x-admin-token':localStorage.getItem('adminToken')||''}, body:JSON.stringify({jobId:currentJobId})});
-      log(`STOP requested for ${currentJobId}`);
-    }catch(e){ log(`STOP request failed: ${e.message}`); }
-    disconnectLogs();
+  // Stop job (POST /stop)
+  stopBtn.onclick = async () => {
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) { alert('Set admin token'); return; }
+    if (!currentJobId) { alert('No job running'); return; }
+
+    try {
+      const res = await fetch('/stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({ sessionId: currentJobId })
+      });
+      const j = await res.json().catch(()=>({ ok:false }));
+      if (!j.ok) {
+        log('Stop response: ' + (j.message || 'unknown'));
+        alert('Stop failed: ' + (j.message || 'unknown'));
+      } else {
+        log('Stop requested');
+      }
+    } catch (e) {
+      log('Stop request error: ' + e.message);
+    } finally {
+      disconnectLogs();
+    }
   };
 
-  function connectLogs(jobId){
+  // SSE connect (server route expects /events?sessionId=...)
+  function connectLogs(sessionId) {
     disconnectLogs();
-    try{
-      eventSource=new EventSource('/events/'+encodeURIComponent(jobId));
-      eventSource.onmessage=(e)=>{ log(e.data); };
-      eventSource.onerror=(e)=>{ log('[stream closed]'); try{ eventSource.close(); }catch(_){} eventSource=null; };
-      log('[EventSource connected]');
-    }catch(err){
+    try {
+      eventSource = new EventSource('/events?sessionId=' + encodeURIComponent(sessionId));
+      eventSource.onopen = () => log('SSE connected');
+      eventSource.onmessage = (e) => {
+        // default message events
+        let txt = e.data;
+        // sometimes server sends JSON payloads -> try parse for nicer display
+        try {
+          const p = JSON.parse(e.data);
+          txt = (typeof p === 'string' ? p : JSON.stringify(p));
+        } catch(_) {}
+        log(txt);
+      };
+      // also listen to named events if server sends them:
+      eventSource.addEventListener('info', (e) => { try { log('[info] ' + e.data); } catch(_){} });
+      eventSource.addEventListener('error', (e) => { log('[SSE error]'); });
+      eventSource.onerror = (e) => { log('[stream closed]'); try{ eventSource.close(); }catch(_){} eventSource=null; };
+    } catch (err) {
       log('[EventSource not available — polling fallback]');
+      // fallback: simple polling endpoint (if server implements /status or /logs)
       let last = 0;
       eventSource = { closed:false, timer:null };
       async function poll(){
-        if(eventSource.closed) return;
-        try{
-          const r=await fetch('/logs/'+encodeURIComponent(jobId)+'?from='+last);
-          if(r.ok){
-            const txt=await r.text();
-            if(txt){
-              log(txt.trim());
-              last = Date.now();
+        if (eventSource.closed) return;
+        try {
+          const r = await fetch('/status', {
+            method: 'GET',
+            headers: { 'x-admin-token': localStorage.getItem('adminToken') || '' }
+          });
+          if (r.ok) {
+            const j = await r.json().catch(()=>null);
+            if (j && Array.isArray(j.logs)) {
+              for (const l of j.logs) log(l);
             }
           }
-        }catch(e){}
-        eventSource.timer=setTimeout(poll,2000);
+        } catch (e){}
+        eventSource.timer = setTimeout(poll, 2000);
       }
       poll();
     }
   }
+
   function disconnectLogs(){
-    if(eventSource){
-      try{ if(eventSource.close) eventSource.close(); if(eventSource.timer) clearTimeout(eventSource.timer); }catch(e){}
-      eventSource=null;
+    if (eventSource) {
+      try { if (eventSource.close) eventSource.close(); if (eventSource.timer) clearTimeout(eventSource.timer); } catch(e){}
+      eventSource = null;
     }
-    currentJobId=null;
+    currentJobId = null;
   }
 
-  log('Welcome KING 👑 — Your Brahmastra is Ready');
+  // initial message
+  log('UI ready — connect to server and upload cookies before starting.');
 </script>
 </body>
 </html>
