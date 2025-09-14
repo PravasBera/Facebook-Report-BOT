@@ -1,26 +1,36 @@
 FROM node:20-bullseye-slim
 
-# install chromium and minimal deps
+# Install Chromium and deps
 RUN apt-get update && apt-get install -y \
     chromium \
     ca-certificates \
     fonts-liberation \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libgtk-3-0 \
+    wget \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# copy package files first for faster rebuilds
 COPY package*.json ./
-RUN npm install --production
+RUN npm ci --production
 
-# copy rest of the files
 COPY . .
 
 # tell puppeteer where chromium is
 ENV CHROMIUM_PATH=/usr/bin/chromium
 
-# render will inject PORT, use it
 ENV PORT=10000
 EXPOSE 10000
 
