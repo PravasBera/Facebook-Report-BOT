@@ -135,6 +135,120 @@ async function launchBrowserWithFallback(opts = {}) {
   }
 }
 
+// ---------------- Reusable quick validator (replace existing quickValidateCookie) ----------------
+
+/**
+ * Reusable quick validator: uses a session-scoped small browser to validate many cookie lines.
+ * Stores validator browser on the session object as `validatorBrowser`.
+ * Returns { status: 'live'|'invalid'|'error', reason, url? }
+ */
+async function quickValidateCookie(cookies, sessionId) {
+  const sess = getSession(sessionId);
+  const start = Date.now();
+  let page = null;
+  try {
+    // reuse browser if present, otherwise launch and keep in session
+    if (!sess.validatorBrowser || (sess.validatorBrowser.isConnected && !sess.validatorBrowser.process)) {
+      try {
+        sess.validatorBrowser = await launchBrowserWithFallback({
+          args: ['--no-sandbox','--disable-setuid-sandbox','--single-process','--shm-size=64m'],
+          defaultViewport: { width: 360, height: 800 }
+        });
+        sseSend(sessionId, 'log', { msg: 'validator browser started' });
+      } catch (e) {
+        sseSend(sessionId, 'log', { msg: 'validator browser launch failed', error: e && e.message });
+        return { status: 'error', reason: 'validator-launch-failed', error: e && e.message };
+      }
+    }
+
+    const browser = sess.validatorBrowser;
+    page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
+
+    // Nav to mobile site so cookies with .facebook.com domain have expected origin
+    await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
+
+    // Try to set cookies - if some cookies invalid, filter to safe subset
+    let safeCookies = Array.isArray(cookies) ? cookies.slice(0, 100) : [];
+    // ensure domain/path exist for puppeteer setCookie
+    safeCookies = safeCookies.map(c => Object.assign({ domain: '.facebook.com', path: '/', httpOnly:false, secure:true }, c));
+
+    try {
+      await page.setCookie(...safeCookies);
+    } catch (e) {
+      // fallback: try set cookies one-by-one (some cookie entries may be invalid)
+      sseSend(sessionId, 'log', { msg: 'bulk setCookie failed, trying per-cookie', error: e && e.message });
+      const okOnes = [];
+      for (const c of safeCookies) {
+        try {
+          await page.setCookie(c);
+          okOnes.push(c);
+        } catch (ee) {
+          sseSend(sessionId, 'log', { msg:'cookie rejected', name: c.name, error: ee && ee.message });
+        }
+      }
+      if (!okOnes.length) {
+        await page.close().catch(()=>{});
+        return { status:'error', reason:'no-cookie-was-set' };
+      }
+    }
+
+    // reload so cookies apply
+    await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
+    await page.waitForTimeout(900 + Math.floor(Math.random()*800));
+
+    const curUrl = await page.url().catch(()=>null);
+    const html = await page.content().catch(()=>'');
+
+    const lower = String(html).toLowerCase();
+
+    // heuristics
+    const loginPhrases = ['log in to see posts','log in to see','log in','please log in','create new account','password','sign up'];
+    let loginDetected = loginPhrases.some(p => lower.includes(p));
+
+    const urlLogin = curUrl && (/\/login|\/checkpoint|\/recover|\/home\.php/.test(curUrl));
+
+    if (loginDetected || urlLogin) {
+      sseSend(sessionId, 'log', { msg:'validator: invalid (login detected)', url: curUrl });
+      try { await page.close(); } catch(_) {}
+      return { status:'invalid', reason:'login-prompt-or-redirect', url: curUrl };
+    }
+
+    // positive markers for logged in view
+    const positive = lower.includes('see more from') || lower.includes('profile photo') || lower.includes('friends') || /\/p\/[a-z0-9\-]+/.test(lower);
+    if (positive) {
+      sseSend(sessionId, 'log', { msg:'validator: live (profile markers found)', url: curUrl });
+      try { await page.close(); } catch(_) {}
+      return { status:'live', reason:'profile-markers', url: curUrl };
+    }
+
+    // fallback - if no explicit login detected consider live
+    sseSend(sessionId, 'log', { msg:'validator fallback: considered live', url: curUrl });
+    try { await page.close(); } catch(_) {}
+    return { status:'live', reason:'no-login-detected', url: curUrl };
+
+  } catch (e) {
+    try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
+    // if validator browser seems broken, try to close and clear it so next call will relaunch
+    try { if (sess.validatorBrowser) { await sess.validatorBrowser.close(); } } catch(_) {}
+    sess.validatorBrowser = null;
+    sseSend(sessionId, 'log', { msg:'validator error', error: e && e.message ? e.message : String(e) });
+    return { status:'error', reason: e && e.message ? e.message : String(e) };
+  } finally {
+    const took = Date.now() - start;
+    sseSend(sessionId, 'log', { msg:'quickValidate took ms', ms: took });
+  }
+}
+
+// ------------- Ensure validatorBrowser is closed during graceful shutdown -------------
+// Add this inside your gracefulShutdown() before process.exit(0):
+// for (const [sid, sess] of sessions.entries()) {
+//   if (sess.validatorBrowser) {
+//     try { await sess.validatorBrowser.close(); } catch(e) {}
+//     sess.validatorBrowser = null;
+//   }
+// }
+
 // multer storage
 const sanitize = (name) => String(name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
 const storage = multer.diskStorage({
@@ -453,26 +567,111 @@ app.get('/events', (req, res) => {
   });
 });
 
-// uploadCookies (multipart OR json text)
+// --- Replace your /uploadCookies handler with this whole block ---
+
 app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, res) => {
+  const sessionId = req.query.sessionId || req.body.sessionId || 'default';
   try {
+    let raw = '';
     if (req.file) {
       const target = path.join(UPLOAD_DIR, 'cookies.txt');
       await fsp.copyFile(req.file.path, target);
       try { await fsp.unlink(req.file.path); } catch(_) {}
-      simpleLog('cookies uploaded file -> cookies.txt');
-      return res.json({ ok:true, path:'uploads/cookies.txt' });
+      raw = await fsp.readFile(target, 'utf8');
+      sseSend(sessionId, 'log', { msg: 'cookies file saved', file: 'uploads/cookies.txt' });
     } else if (req.body && req.body.text) {
-      const txt = String(req.body.text || '').trim();
-      if (!txt) return res.status(400).json({ ok:false, message:'Empty text' });
-      await fsp.writeFile(path.join(UPLOAD_DIR,'cookies.txt'), txt, 'utf-8');
-      simpleLog('cookies uploaded via text');
-      return res.json({ ok:true, path:'uploads/cookies.txt' });
+      raw = String(req.body.text || '').trim();
+      if (!raw) return res.status(400).json({ ok:false, message:'Empty text' });
+      await fsp.writeFile(path.join(UPLOAD_DIR,'cookies.txt'), raw, 'utf8');
+      sseSend(sessionId, 'log', { msg: 'cookies written from text' });
     } else {
       return res.status(400).json({ ok:false, message:'No file or text' });
     }
+
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) {
+      sseSend(sessionId, 'warn', { msg: 'No cookie lines found in file' });
+      return res.json({ ok:true, parsed: 0 });
+    }
+
+    function parseLineToKv(line) {
+      const parts = line.split(';').map(p => p.trim()).filter(Boolean);
+      const kv = {};
+      for (const p of parts) {
+        const idx = p.indexOf('=');
+        if (idx === -1) continue;
+        const k = p.slice(0, idx).trim();
+        const v = p.slice(idx+1).trim();
+        kv[k] = v;
+      }
+      return kv;
+    }
+
+    let parsedCount = 0;
+    // We'll validate sequentially to avoid overloading the host.
+    for (let i=0;i<lines.length;i++) {
+      const l = lines[i];
+      const kv = parseLineToKv(l);
+      const hasCUser = !!kv['c_user'];
+      const hasXs = !!kv['xs'];
+      const expires = kv['expires'] || kv['Expires'] || kv['Max-Age'] || kv['max-age'] || null;
+      const isAccount = hasCUser && hasXs;
+
+      const summary = {
+        lineIndex: i+1,
+        snippet: l.length > 160 ? l.slice(0,160)+'...' : l,
+        hasCUser,
+        hasXs,
+        expires: expires || null,
+        isAccount
+      };
+
+      if (!isAccount) {
+        sseSend(sessionId, 'cookieStatus', { status: 'invalid', reason: 'missing c_user/xs', ...summary });
+        continue;
+      }
+
+      parsedCount++;
+      sseSend(sessionId, 'cookieStatus', { status: 'parsed', ...summary });
+
+      // create puppeteer-style cookie objects for setCookie
+      const cookieObjects = [];
+      for (const [k,v] of Object.entries(kv)) {
+        // only include key=value pairs, ignore flags like 'secure' without =
+        if (k && v !== undefined) {
+          // default domain/path if not present - adjust as needed
+          cookieObjects.push({
+            name: k,
+            value: v,
+            domain: '.facebook.com',
+            path: '/',
+            httpOnly: false,
+            secure: true
+          });
+        }
+      }
+
+      // run quick validation for this account (sequential)
+      sseSend(sessionId, 'log', { msg: `Validating account line ${i+1}` });
+      const result = await quickValidateCookie(cookieObjects, sessionId);
+
+      if (result.status === 'live') {
+        sseSend(sessionId, 'cookieStatus', { status: 'live', lineIndex:i+1, reason: result.reason, url: result.url || null });
+      } else if (result.status === 'invalid') {
+        sseSend(sessionId, 'cookieStatus', { status: 'invalid', lineIndex:i+1, reason: result.reason, url: result.url || null });
+      } else {
+        sseSend(sessionId, 'cookieStatus', { status: 'error', lineIndex:i+1, reason: result.reason });
+      }
+
+      // small gap to be polite
+      await new Promise(r => setTimeout(r, 600 + Math.floor(Math.random()*400)));
+    }
+
+    sseSend(sessionId, 'log', { msg:`Parsed ${parsedCount} account cookie(s)` });
+    return res.json({ ok:true, parsed: parsedCount, totalLines: lines.length });
   } catch (e) {
     simpleLog('uploadCookies-error', e && e.message);
+    sseSend(sessionId, 'error', { msg: 'upload handler error', error: e && e.message });
     return res.status(500).json({ ok:false, error: e && e.message ? e.message : String(e) });
   }
 });
