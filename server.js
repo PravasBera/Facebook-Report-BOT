@@ -158,71 +158,85 @@ async function saveCookieIndex(arr) {
  * cookies: array of puppeteer cookie objects
  * sessionId: for sse logging
  */
+// Replace the old quickValidateCookie with this fixed version
 async function quickValidateCookie(cookies, sessionId) {
   let browser = null;
   let page = null;
   const start = Date.now();
   try {
-    browser = await launchBrowserWithFallback({ args: ['--no-sandbox','--disable-setuid-sandbox'], defaultViewport: { width: 360, height: 800 }});
+    // launch a small headless browser instance
+    browser = await launchBrowserWithFallback({ args: ['--no-sandbox','--disable-setuid-sandbox'], defaultViewport: { width: 360, height: 800 } });
     page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
 
-    // go to mobile domain (lighter)
+    // Go to mobile site first
     await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
+
+    // try to set cookies; fail early if shape invalid
     try {
       await page.setCookie(...cookies);
     } catch (e) {
       sseSend(sessionId, 'log', { msg: 'quickValidate: cookie set failed', error: e && e.message });
-      try { await page.close(); } catch(_) {}
-      try { await browser.close(); } catch(_) {}
-      return { status: 'error', reason: 'cookie-set-failed' };
+      // cleanup
+      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
+      try { if (browser) await browser.close(); } catch(_) {}
+      return { status: 'error', reason: 'cookie-set-failed', error: e && e.message };
     }
 
+    // reload so cookies take effect
     await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
+    await page.waitForTimeout(1100);
 
-    // wait a bit for client render
-    await page.waitForTimeout(1000 + Math.floor(Math.random()*800));
-
-    // get url and html safely
+    // get url and html safely (page.url() is synchronous)
     let curUrl = null;
     try { curUrl = page.url(); } catch(_) { curUrl = null; }
-
     let html = '';
     try { html = await page.content(); } catch(_) { html = ''; }
-
     const lower = String(html).toLowerCase();
-    const loginHints = ['log in to see posts','log in to see','log in','create new account','password','please log in','sign up','continue to facebook'];
+
+    // heuristics to detect logged-out/login pages
+    const loginHints = [
+      'log in to see posts',
+      'log in to see',
+      'log in',
+      'create new account',
+      'password',
+      'sign up',
+      'please log in',
+      'log into facebook'
+    ];
+
     let flaggedLogin = false;
     for (const h of loginHints) {
       if (lower.includes(h)) { flaggedLogin = true; break; }
     }
-    const urlLogin = curUrl && (/\/login|\/checkpoint|\/recover|\/home\.php/.test(curUrl));
 
-    // detect profile markers for logged-in view
-    const hasProfileMarker = lower.includes('see more from') || lower.includes('profile photo') || /\/[0-9]{6,}\/photos|friends/.test(lower);
+    const urlLogin = curUrl && (/\/login|\/checkpoint|\/home\.php|\/dialog\/oauth/.test(curUrl));
 
     if (flaggedLogin || urlLogin) {
       sseSend(sessionId, 'log', { msg: 'quickValidate result: invalid (login detected)', url: curUrl });
-      await page.close().catch(()=>{});
-      await browser.close().catch(()=>{});
+      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
+      try { if (browser) await browser.close(); } catch(_) {}
       return { status: 'invalid', reason: 'login-prompt-or-redirect', url: curUrl };
     }
 
+    const hasProfileMarker = lower.includes('see more from') || lower.includes('profile photo') || lower.includes('friends') || lower.includes('/profile.php') || /\/p\/[A-Za-z0-9\-]+/.test(lower);
+
     if (hasProfileMarker) {
       sseSend(sessionId, 'log', { msg: 'quickValidate result: live (profile markers found)', url: curUrl });
-      await page.close().catch(()=>{});
-      await browser.close().catch(()=>{});
+      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
+      try { if (browser) await browser.close(); } catch(_) {}
       return { status: 'live', reason: 'profile-markers', url: curUrl };
     }
 
-    // fallback: if no login detected, consider live
+    // fallback: if no explicit login detected => consider live
     sseSend(sessionId, 'log', { msg: 'quickValidate fallback: considered live', url: curUrl });
-    await page.close().catch(()=>{});
-    await browser.close().catch(()=>{});
+    try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
+    try { if (browser) await browser.close(); } catch(_) {}
     return { status: 'live', reason: 'no-login-detected', url: curUrl };
 
   } catch (e) {
-    try { if (page && !page.isClosed && typeof page.close === 'function') await page.close(); } catch(_) {}
+    try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
     try { if (browser) await browser.close(); } catch(_) {}
     sseSend(sessionId, 'log', { msg:'quickValidate error', error: e && e.message ? e.message : String(e) });
     return { status: 'error', reason: e && e.message ? e.message : String(e) };
