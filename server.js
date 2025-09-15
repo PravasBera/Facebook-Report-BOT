@@ -169,9 +169,10 @@ async function quickValidateCookie(cookies, sessionId) {
     await page.waitForTimeout(1200);
 
     // grab content (text) and url
-    const curUrl = await page.url().catch(()=>null);
-    const html = await page.content().catch(()=>'');
-
+let curUrl = null;
+let html = '';
+try { curUrl = page.url(); } catch(_) { curUrl = null; }
+try { html = await page.content(); } catch(_) { html = ''; }
     const lower = String(html).toLowerCase();
     const loginHints = [
       'log in to see posts',
