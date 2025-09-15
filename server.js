@@ -1,6 +1,6 @@
 // server.js
 // Robust Express + Puppeteer automation server (session-scoped debug endpoints)
-// Install: npm install express puppeteer puppeteer-core multer cors body-parser
+// Install: npm install express puppeteer multer cors body-parser
 
 'use strict';
 
@@ -135,34 +135,31 @@ async function launchBrowserWithFallback(opts = {}) {
   }
 }
 
-// --- Add quickValidateCookie helper ---
+// --- Quick cookie validator helper ---
 /**
  * Quick validate cookies using a short headless browser session.
  * - cookies: array of puppeteer cookie objects ({name, value, domain, path, ...})
  * - sessionId: SSE session id to send logs
- * Returns: { status: 'live'|'invalid'|'error', reason?: string, url?: string, ms?: number }
+ * Returns: { status: 'live'|'invalid'|'error', reason?: string, url?:string }
  */
 async function quickValidateCookie(cookies, sessionId) {
   let browser = null;
   let page = null;
   const start = Date.now();
   try {
-    // launch a very small headless browser instance
+    // launch a small headless browser instance
     browser = await launchBrowserWithFallback({ args: ['--no-sandbox','--disable-setuid-sandbox'], defaultViewport: { width: 360, height: 800 } });
     page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
 
-    // navigate to a safe base first (some servers expect origin)
+    // navigate to a safe base first
     await page.goto('https://m.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
     // set cookies
     try {
       await page.setCookie(...cookies);
     } catch (e) {
       sseSend(sessionId, 'log', { msg: 'quickValidate: cookie set failed', error: e && e.message });
-      const tookErr = Date.now() - start;
-      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
-      try { if (browser) await browser.close(); } catch(_) {}
-      return { status: 'error', reason: 'cookie-set-failed', ms: tookErr };
+      return { status: 'error', reason: 'cookie-set-failed' };
     }
 
     // navigate again so cookies take effect
@@ -175,7 +172,6 @@ async function quickValidateCookie(cookies, sessionId) {
     const curUrl = await page.url().catch(()=>null);
     const html = await page.content().catch(()=>'');
 
-    // simple heuristics: if content contains explicit login text -> invalid
     const lower = String(html).toLowerCase();
     const loginHints = [
       'log in to see posts',
@@ -186,38 +182,36 @@ async function quickValidateCookie(cookies, sessionId) {
       if (lower.includes(h)) { flaggedLogin = true; break; }
     }
 
-    const urlLogin = curUrl && (/\/login|\/checkpoint|\/login.php|\/home\.php/.test(curUrl));
+    const urlLogin = curUrl && (/\/login|\/checkpoint|\/home\.php/.test(curUrl));
 
     if (flaggedLogin || urlLogin) {
-      const took = Date.now() - start;
       sseSend(sessionId, 'log', { msg: 'quickValidate result: invalid (login detected)', url: curUrl });
-      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
-      try { if (browser) await browser.close(); } catch(_) {}
-      return { status: 'invalid', reason: 'login-prompt-or-redirect', url: curUrl, ms: took };
+      await page.close().catch(()=>{});
+      await browser.close().catch(()=>{});
+      return { status: 'invalid', reason: 'login-prompt-or-redirect', url: curUrl };
     }
 
-    const hasProfileMarker = lower.includes('see more from') || lower.includes('profile photo') || /\/p\/[A-Za-z0-9\-]+/.test(lower) || lower.includes('profile picture');
+    const hasProfileMarker = lower.includes('see more from') || lower.includes('profile photo') || /\/p\/[A-Za-z0-9\-]+/.test(lower);
     if (hasProfileMarker) {
-      const took = Date.now() - start;
       sseSend(sessionId, 'log', { msg: 'quickValidate result: live (profile markers found)', url: curUrl });
-      try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
-      try { if (browser) await browser.close(); } catch(_) {}
-      return { status: 'live', reason: 'profile-markers', url: curUrl, ms: took };
+      await page.close().catch(()=>{});
+      await browser.close().catch(()=>{});
+      return { status: 'live', reason: 'profile-markers', url: curUrl };
     }
 
-    // fallback: considered live if no login prompt detected
-    const took = Date.now() - start;
     sseSend(sessionId, 'log', { msg: 'quickValidate fallback: considered live', url: curUrl });
-    try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
-    try { if (browser) await browser.close(); } catch(_) {}
-    return { status: 'live', reason: 'no-login-detected', url: curUrl, ms: took };
+    await page.close().catch(()=>{});
+    await browser.close().catch(()=>{});
+    return { status: 'live', reason: 'no-login-detected', url: curUrl };
 
   } catch (e) {
     try { if (page && !page.isClosed()) await page.close(); } catch(_) {}
     try { if (browser) await browser.close(); } catch(_) {}
-    const took = Date.now() - start;
     sseSend(sessionId, 'log', { msg:'quickValidate error', error: e && e.message ? e.message : String(e) });
-    return { status: 'error', reason: e && e.message ? e.message : String(e), ms: took };
+    return { status: 'error', reason: e && e.message ? e.message : String(e) };
+  } finally {
+    const took = Date.now() - start;
+    sseSend(sessionId, 'log', { msg: 'quickValidate took ms', ms: took });
   }
 }
 
@@ -266,7 +260,7 @@ function getSession(sid = 'default') {
       browser: null,
       pages: [],
       currentPage: null,
-      // store parsed cookie results for this session
+      // store parsed cookie lines and validation results
       parsedCookies: []
     });
   }
@@ -286,7 +280,7 @@ function sseSend(sid, event, payload) {
   }
 }
 
-// cookie parser & loader (existing runner uses these)
+// cookie parser & loader
 function parseRawCookieLine(line) {
   if (!line || !line.trim()) return null;
   const parts = line.split(';').map(p => p.trim()).filter(Boolean);
@@ -390,7 +384,7 @@ async function runFlowOnPage(page, flowSteps, opts = {}) {
   }
 }
 
-// --- main runner (unchanged from your original, kept for completeness) ---
+// --- main runner ---
 async function reportRunner(sessionId, opts = {}) {
   const sess = getSession(sessionId);
   try {
@@ -438,7 +432,6 @@ async function reportRunner(sessionId, opts = {}) {
 
         page = await browser.newPage();
         sess.pages.push(page);
-        // session-scoped current page (debug endpoints use this)
         sess.currentPage = page;
         simpleLog('page-created-for-account', accId);
 
@@ -523,12 +516,13 @@ app.get('/flows', (req, res) => res.json(flows));
 
 // SSE
 app.get('/events', (req, res) => {
-  // allow adminToken in query for SSE connections (so UI can connect)
   const sid = req.query.sessionId || 'default';
-  const token = req.query.adminToken || req.headers['x-admin-token'];
+  const token = req.query.adminToken || '';
+  // requireAdmin is a middleware; EventSource can't set headers easily, so do a quick check
   if (!token || token !== ADMIN_TOKEN) {
-    simpleLog('sse-unauthorized', { ip: req.ip, path: req.path });
-    return res.status(401).send('Unauthorized');
+    simpleLog('events-unauthorized', { ip: req.ip });
+    res.status(401).end('Unauthorized');
+    return;
   }
 
   const sess = getSession(sid);
@@ -557,9 +551,33 @@ app.get('/events', (req, res) => {
   });
 });
 
-// --- uploadCookies handler (full replacement) ---
+// --- cookieList endpoint to show parsed cookies for a session ---
+app.get('/cookieList', requireAdmin, (req, res) => {
+  const sessionId = req.query.sessionId || 'default';
+  const sess = getSession(sessionId);
+  try {
+    const list = (sess.parsedCookies || []).slice(); // shallow copy
+    const counts = { total: 0, parsed:0, live:0, invalid:0, error:0, other:0 };
+    for (const it of list) {
+      const st = (it.validateResult && it.validateResult.status) || (it.isAccount ? 'parsed' : 'invalid');
+      counts.total++;
+      if (st === 'parsed') counts.parsed++;
+      else if (st === 'live') counts.live++;
+      else if (st === 'invalid') counts.invalid++;
+      else if (st === 'error') counts.error++;
+      else counts.other++;
+    }
+    return res.json({ ok:true, total: list.length, counts, cookies: list });
+  } catch (e) {
+    simpleLog('cookieList-error', e && e.message);
+    return res.status(500).json({ ok:false, error: e && e.message });
+  }
+});
+
+// --- Replace your /uploadCookies handler with this whole block ---
 app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, res) => {
   const sessionId = req.query.sessionId || req.body.sessionId || 'default';
+  const sess = getSession(sessionId);
   try {
     let raw = '';
     if (req.file) {
@@ -597,7 +615,8 @@ app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, r
     }
 
     let parsedCount = 0;
-    const sess = getSession(sessionId);
+    // ensure session parsedCookies exists
+    sess.parsedCookies = sess.parsedCookies || [];
 
     // We'll validate sequentially to avoid overloading the host.
     for (let i=0;i<lines.length;i++) {
@@ -617,26 +636,27 @@ app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, r
         isAccount
       };
 
+      // prepare record and push into session store
+      const record = {
+        lineIndex: summary.lineIndex,
+        snippet: summary.snippet,
+        hasCUser: summary.hasCUser,
+        hasXs: summary.hasXs,
+        expires: summary.expires,
+        isAccount: summary.isAccount,
+        parsedAt: new Date().toISOString(),
+        validateResult: null
+      };
+      sess.parsedCookies.push(record);
+
       if (!isAccount) {
-        // store invalid parse entry into session parsedCookies
-        const entryInvalid = {
-          lineIndex: summary.lineIndex,
-          snippet: summary.snippet,
-          hasCUser,
-          hasXs,
-          expires: summary.expires,
-          isAccount,
-          parsedAt: new Date().toISOString(),
-          validateResult: { status: 'invalid', reason: 'missing c_user/xs' }
-        };
-        sess.parsedCookies.push(entryInvalid);
-        sseSend(sessionId, 'cookieStatus', Object.assign({ status: 'invalid' }, entryInvalid));
-        simpleLog('cookie-line-skip', summary.snippet);
+        sseSend(sessionId, 'cookieStatus', { status: 'invalid', reason: 'missing c_user/xs', ...record });
+        // don't attempt validation; continue
         continue;
       }
 
       parsedCount++;
-      sseSend(sessionId, 'cookieStatus', { status: 'parsed', ...summary });
+      sseSend(sessionId, 'cookieStatus', { status: 'parsed', ...record });
 
       // create puppeteer-style cookie objects for setCookie
       const cookieObjects = [];
@@ -657,34 +677,16 @@ app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, r
       sseSend(sessionId, 'log', { msg: `Validating account line ${i+1}` });
       const result = await quickValidateCookie(cookieObjects, sessionId);
 
-      // build entry and push to session store
-      const entry = {
-        lineIndex: i+1,
-        snippet: l.length > 160 ? l.slice(0,160)+'...' : l,
-        hasCUser,
-        hasXs,
-        expires: expires || null,
-        isAccount,
-        parsedAt: new Date().toISOString(),
-        validateResult: {
-          status: result.status,
-          reason: result.reason || null,
-          url: result.url || null,
-          ms: result.ms || null
-        }
-      };
-      sess.parsedCookies.push(entry);
+      // attach result to record in session store
+      record.validateResult = { status: result.status, reason: result.reason || null, url: result.url || null };
 
-      // send SSE status
       if (result.status === 'live') {
-        sseSend(sessionId, 'cookieStatus', { status: 'live', lineIndex: i+1, reason: result.reason, url: result.url || null, ms: result.ms || null });
+        sseSend(sessionId, 'cookieStatus', { status: 'live', lineIndex:record.lineIndex, reason: result.reason, url: result.url || null });
       } else if (result.status === 'invalid') {
-        sseSend(sessionId, 'cookieStatus', { status: 'invalid', lineIndex: i+1, reason: result.reason, url: result.url || null, ms: result.ms || null });
+        sseSend(sessionId, 'cookieStatus', { status: 'invalid', lineIndex:record.lineIndex, reason: result.reason, url: result.url || null });
       } else {
-        sseSend(sessionId, 'cookieStatus', { status: 'error', lineIndex: i+1, reason: result.reason, ms: result.ms || null });
+        sseSend(sessionId, 'cookieStatus', { status: 'error', lineIndex:record.lineIndex, reason: result.reason });
       }
-
-      simpleLog('SENT-cookieStatus', sessionId, `line:${entry.lineIndex}`, entry.validateResult && entry.validateResult.status);
 
       // small gap to be polite
       await new Promise(r => setTimeout(r, 600 + Math.floor(Math.random()*400)));
@@ -697,27 +699,6 @@ app.post('/uploadCookies', requireAdmin, upload.single('cookies'), async (req, r
     sseSend(sessionId, 'error', { msg: 'upload handler error', error: e && e.message });
     return res.status(500).json({ ok:false, error: e && e.message ? e.message : String(e) });
   }
-});
-
-// GET cookie list + summary (admin)
-app.get('/cookieList', requireAdmin, (req, res) => {
-  const sessionId = req.query.sessionId || 'default';
-  const sess = getSession(sessionId);
-  // build summary counts
-  const total = sess.parsedCookies.length;
-  const counts = { live:0, invalid:0, error:0, parsed:0, unknown:0 };
-  for (const c of sess.parsedCookies) {
-    const s = (c.validateResult && c.validateResult.status) ? c.validateResult.status : (c.isAccount ? 'parsed' : 'invalid');
-    if (counts[s] === undefined) counts.unknown++;
-    else counts[s]++;
-  }
-
-  res.json({
-    sessionId,
-    total,
-    counts,
-    cookies: sess.parsedCookies.slice().reverse() // latest first
-  });
 });
 
 // start
