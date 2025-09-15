@@ -425,11 +425,40 @@ async function reportRunner(sessionId, opts = {}) {
     let sinceRestart = 0;
     const RESTART_AFTER = Math.max(5, parseInt(process.env.RESTART_AFTER || '25',10));
 
-    let accountIndex = 0;
+let accountIndex = 0;
     for (const cookies of cookieAccounts) {
       if (sess.abort) break;
       accountIndex++;
-      const accId = cookies.find(c => c.name === 'c_user')?.value || `acct_${accountIndex}`;
+
+      // --- Normalize cookies into an array of cookie objects ---
+      // cookies might be:
+      //  - an array of cookie objects (expected)
+      //  - a single object (rare/malformed)
+      //  - an object map
+      //  - nested arrays (accidental)
+      let accountCookies = [];
+      if (Array.isArray(cookies)) {
+        // flatten any nested arrays inside
+        accountCookies = cookies.flat(Infinity).filter(Boolean);
+      } else if (cookies && typeof cookies === 'object') {
+        // if it's an object map { name: value, ... } transform to puppeteer cookie objects
+        // if it already looks like a cookie object with name & value, wrap it
+        if (cookies.name && cookies.value) {
+          accountCookies = [cookies];
+        } else {
+          // convert key->value pairs to cookie objects
+          accountCookies = Object.entries(cookies).map(([k,v]) => ({ name: k, value: String(v), domain: '.facebook.com', path:'/', httpOnly:false, secure:true }));
+        }
+      } else {
+        // fallback: skip invalid item
+        sseSend(sessionId, 'warn', { msg: 'Skipping malformed cookie entry', index: accountIndex });
+        continue;
+      }
+
+      // ensure proper structure (array of {name,value,...})
+      accountCookies = accountCookies.filter(c => c && c.name && (c.value !== undefined));
+
+      const accId = accountCookies.find(c => c.name === 'c_user')?.value || `acct_${accountIndex}`;
       sseSend(sessionId, 'info', { msg:`Account ${accountIndex}`, account: accId });
 
       let page = null;
@@ -450,9 +479,19 @@ async function reportRunner(sessionId, opts = {}) {
         await page.setUserAgent('Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36');
 
         await page.goto('https://www.facebook.com', { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(()=>{});
-        await page.setCookie(...cookies);
 
-        await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        // set cookies safely — ensure we only pass valid cookie objects
+        if (accountCookies.length) {
+          try {
+            await page.setCookie(...accountCookies);
+          } catch (e) {
+            sseSend(sessionId, 'warn', { msg: 'page.setCookie failed', account: accId, error: e && e.message });
+          }
+        } else {
+          sseSend(sessionId, 'warn', { msg: 'No cookies to set for account', account: accId });
+        }
+
+        await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(()=>{});
         try { const curUrl = await page.url(); simpleLog('Page navigated', { account: accId, url: curUrl }); sseSend(sessionId,'info',{msg:'page-url',url:curUrl}); } catch(e){}
 
         await page.waitForTimeout(1200 + Math.floor(Math.random()*800));
@@ -478,18 +517,6 @@ async function reportRunner(sessionId, opts = {}) {
       sinceRestart++;
       await new Promise(r => setTimeout(r, (opts.gapMs || 2500) + Math.floor(Math.random()*2000)));
     }
-
-    try { await browser.close(); } catch(e){}
-    sess.browser = null; sess.pages = []; sess.currentPage = null;
-    sseSend(sessionId, 'done', { msg: 'Runner finished' });
-  } catch (e) {
-    sseSend(sessionId, 'fatal', { msg: e && e.message ? e.message : String(e) });
-    simpleLog('reportRunner-fatal', e && e.stack ? e.stack : String(e));
-  } finally {
-    const s = getSession(sessionId);
-    s.running = false; s.abort = false;
-  }
-}
 
 // --- API & debug endpoints ---
 
