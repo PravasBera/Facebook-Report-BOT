@@ -517,7 +517,30 @@ let accountIndex = 0;
       sinceRestart++;
       await new Promise(r => setTimeout(r, (opts.gapMs || 2500) + Math.floor(Math.random()*2000)));
     }
-
+    
+// loop শেষ হওয়ার পর clean-up
+    try {
+      if (browser) {
+        try { await browser.close(); } catch (e) { simpleLog('browser-close-final', e && e.message); }
+      }
+      sess.browser = null;
+      sess.pages = [];
+      sess.currentPage = null;
+      sseSend(sessionId, 'done', { msg: 'Runner finished' });
+    } catch (e) {
+      sseSend(sessionId, 'fatal', { msg: e && e.message ? e.message : String(e) });
+      simpleLog('reportRunner-final-error', e && e.stack ? e.stack : String(e));
+    } finally {
+      sess.running = false;
+      sess.abort = false;
+    }
+  } catch (e) {
+    sseSend(sessionId, 'fatal', { msg: e && e.message ? e.message : String(e) });
+    simpleLog('reportRunner-fatal', e && e.stack ? e.stack : String(e));
+    sess.running = false;
+    sess.abort = false;
+  }
+} // <--- এখানে reportRunner async function পুরোপুরি বন্ধ হবে
 // --- API & debug endpoints ---
 
 // debug screenshot (session-scoped)
