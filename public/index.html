@@ -234,6 +234,38 @@
           <input id="cookiesFile" type="file" accept=".txt" aria-label="Cookies file" />
         </div>
 
+        <!-- Cookie Manager Section -->
+    <div class="card" role="region" aria-label="Cookie Manager">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:800; font-size:16px;">Cookie Manager</div>
+        <div style="color:#9aa3b2; font-size:13px;">Upload & validate cookies</div>
+      </div>
+
+      <form id="uploadForm" style="margin-top:12px">
+        <textarea id="textCookies" placeholder="Paste cookies here (one per line)" style="width:100%;min-height:100px;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+        <div style="margin-top:8px">
+          <input type="file" id="fileInput" name="cookies" accept=".txt" />
+          <button type="submit" class="btn-upload btn" style="margin-left:8px">Upload</button>
+        </div>
+      </form>
+      <div id="uploadResult" style="margin-top:8px;font-size:13px;color:#666"></div>
+
+      <div style="margin-top:16px; font-weight:700;">Indexed Cookies</div>
+      <div style="font-size:13px;color:#666">Summary: <span id="summary"></span></div>
+      <table id="cookieTable" style="width:100%;margin-top:8px;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#f5f7fb">
+            <th>#</th><th>Snippet</th><th>Status</th><th>Reason/URL</th><th>ParsedAt</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="refreshList" class="btn-ghost btn" style="margin-top:8px">Refresh List</button>
+
+      <div style="margin-top:16px; font-weight:700;">Cookie Log</div>
+      <pre id="cookieLog" style="background:#000;color:#66ff99;padding:10px;border-radius:8px;height:200px;overflow:auto;font-family:monospace;font-size:13px"></pre>
+    </div>
+
         <div class="buttons">
           <button id="uploadCookies" class="btn-upload btn">Upload Cookies</button>
           <button id="startBtn" class="btn-start btn">Start</button>
@@ -380,6 +412,59 @@ window.addEventListener('DOMContentLoaded', () => {
       log('upload error: ' + e.message);
     }
   };
+
+  // Cookie Manager logic
+  const cookieLogEl = document.getElementById('cookieLog');
+  function logCookie(msg){
+    const now = new Date().toLocaleTimeString();
+    cookieLogEl.textContent += `[${now}] ${msg}\n`;
+    cookieLogEl.scrollTop = cookieLogEl.scrollHeight;
+  }
+
+  document.getElementById('uploadForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) return alert('Provide admin token');
+
+    const sid = 'default';
+    const file = document.getElementById('fileInput').files[0];
+    const text = document.getElementById('textCookies').value.trim();
+    const form = new FormData();
+    if (file) form.append('cookies', file);
+    if (text && !file) form.append('text', text);
+
+    logCookie('[upload] sending...');
+    try {
+      const res = await fetch(`/uploadCookies?sessionId=${sid}&adminToken=${encodeURIComponent(adminToken)}`, { method:'POST', body: form });
+      const j = await res.json();
+      logCookie('[upload] response: ' + JSON.stringify(j));
+      document.getElementById('uploadResult').textContent = JSON.stringify(j);
+      fetchCookieList();
+    } catch(e){ logCookie('[upload] error ' + e.message); }
+  });
+
+  async function fetchCookieList(){
+    const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
+    if (!adminToken) return;
+    const sid = 'default';
+    try{
+      const r = await fetch(`/cookieList?sessionId=${sid}&adminToken=${encodeURIComponent(adminToken)}`);
+      const j = await r.json();
+      document.getElementById('summary').textContent = JSON.stringify(j.counts);
+      const tbody = document.querySelector('#cookieTable tbody');
+      tbody.innerHTML='';
+      for(const c of j.cookies){
+        const status = c.validateResult ? c.validateResult.status : (c.isAccount ? 'parsed' : 'invalid');
+        const reason = c.validateResult ? (c.validateResult.reason||c.validateResult.url||'') : '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${c.lineIndex}</td><td>${c.snippet}</td><td>${status}</td><td>${reason}</td><td>${c.parsedAt}</td>`;
+        tbody.appendChild(tr);
+      }
+      logCookie('[fetchList] ok total:'+j.total);
+    } catch(e){ logCookie('[fetchList] error '+e.message); }
+  }
+
+  document.getElementById('refreshList').addEventListener('click', fetchCookieList);
 
   // Start job (POST /start) — note: we create sessionId and send targetUrl + setType
   startBtn.onclick = async () => {
