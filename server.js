@@ -62,25 +62,22 @@ if (!Array.isArray(flows.profileSets) || !flows.profileSets.length) flows.profil
 if (!Array.isArray(flows.pageSets) || !flows.pageSets.length) flows.pageSets = [{ id:'default', name:'default', steps: [] }];
 if (!Array.isArray(flows.postSets) || !flows.postSets.length) flows.postSets = [{ id:'default', name:'default', steps: [] }];
 
-// puppeteer / puppeteer-core detection (used only if VALIDATE_COOKIES is true)
+// puppeteer / puppeteer-core detection
 let puppeteerPkg = null;
-if (VALIDATE_COOKIES) {
+try {
+  puppeteerPkg = require('puppeteer'); // preferred (bundled chromium)
+  simpleLog('Using puppeteer (bundle)');
+} catch (e) {
   try {
-    puppeteerPkg = require('puppeteer'); // preferred
-    simpleLog('Using puppeteer (bundle)');
-  } catch (e) {
-    try {
-      puppeteerPkg = require('puppeteer-core'); // fallback
-      simpleLog('Using puppeteer-core (no bundle)');
-    } catch (e2) {
-      simpleLog('WARNING: puppeteer not installed - cookie validation disabled');
-      // We'll fallback to parsing-only behavior below.
-      puppeteerPkg = null;
-    }
+    puppeteerPkg = require('puppeteer-core'); // fallback
+    simpleLog('Using puppeteer-core (no bundle)');
+  } catch (e2) {
+    simpleLog('ERROR: install puppeteer or puppeteer-core');
+    process.exit(1);
   }
 }
 
-// resolve executable path helper
+// resolve executable path intelligently
 async function resolveExecutablePath() {
   const envPath = process.env.CHROMIUM_PATH || process.env.PUPPETEER_EXECUTABLE_PATH;
   if (envPath && fs.existsSync(envPath)) return envPath;
@@ -103,25 +100,43 @@ async function resolveExecutablePath() {
       if (p && fs.existsSync(p)) return p;
     }
   } catch(_) {}
+
   return null;
 }
 
+const DEFAULT_LAUNCH_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-extensions',
+  '--disable-gpu'
+];
+
 async function launchBrowserWithFallback(opts = {}) {
-  if (!puppeteerPkg) throw new Error('puppeteer not available');
   const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROMIUM_PATH || await resolveExecutablePath();
+
   const launchOpts = {
     headless: 'new',
     executablePath: execPath || undefined,
-    args: [
-      '--no-sandbox','--disable-setuid-sandbox',
-      '--disable-dev-shm-usage','--disable-gpu',
-      '--disable-software-rasterizer','--disable-extensions'
-    ].concat(opts.args || []),
+    args: ([
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+    ]).concat(opts.args || []),
     defaultViewport: opts.defaultViewport || { width: 390, height: 844 },
     ignoreHTTPSErrors: true
   };
+
   simpleLog('Launching chromium from', execPath || 'puppeteer default');
-  return puppeteerPkg.launch(launchOpts);
+  try {
+    return await puppeteerPkg.launch(launchOpts);
+  } catch (err) {
+    simpleLog('puppeteer.launch failed:', err && err.message);
+    throw err;
+  }
 }
 
 // ----------------- COOKIE INDEX storage -----------------
