@@ -177,6 +177,71 @@
 
     footer { margin-top:18px; text-align:center; font-size:13px; color:var(--muted); padding:12px 0; }
 
+    /* ====== NEW: truncate & modal styles for cookie table ====== */
+    #cookieTable { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
+    #cookieTable th, #cookieTable td { padding:8px 6px; border-bottom:1px solid #eef3fb; text-align:left; vertical-align:top; }
+    #cookieTable td.snippet {
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size: 12px;
+    }
+    #cookieTable td.reason {
+      max-width: 360px;
+      word-break: break-word;
+      font-size: 12px;
+      color: #444;
+    }
+    #cookieTable td.action { width:110px; }
+
+    @media (max-width: 720px) {
+      #cookieTable td.snippet { max-width: 160px; font-size:11px; }
+      #cookieTable td.reason { max-width: 180px; font-size:11px; }
+    }
+
+    /* modal */
+    #fullViewModal {
+      position: fixed;
+      left:0; top:0; right:0; bottom:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(4,6,11,0.6);
+      z-index: 9999;
+    }
+    #fullViewModal .modal-body {
+      background: #fff;
+      color: #0b1220;
+      max-width: 92%;
+      max-height: 84%;
+      overflow:auto;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 12px 40px rgba(2,6,23,0.4);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    #fullViewModal .modal-close {
+      float: right;
+      cursor: pointer;
+      background: #ef4444;
+      color: #fff;
+      border-radius:6px;
+      padding:6px 10px;
+      border:0;
+    }
+    .btn-view-full {
+      background: transparent;
+      border: 1px solid #e6eef6;
+      color: #0b1220;
+      padding: 6px 8px;
+      font-size:12px;
+      border-radius:6px;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -252,10 +317,10 @@
 
       <div style="margin-top:16px; font-weight:700;">Indexed Cookies</div>
       <div style="font-size:13px;color:#666">Summary: <span id="summary"></span></div>
-      <table id="cookieTable" style="width:100%;margin-top:8px;border-collapse:collapse;font-size:13px">
+      <table id="cookieTable">
         <thead>
           <tr style="background:#f5f7fb">
-            <th>#</th><th>Snippet</th><th>Status</th><th>Reason/URL</th><th>ParsedAt</th>
+            <th style="width:44px">#</th><th>Snippet</th><th style="width:90px">Status</th><th>Reason/URL</th><th style="width:170px">ParsedAt</th><th>Action</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -266,7 +331,7 @@
       <pre id="cookieLog" style="background:#000;color:#66ff99;padding:10px;border-radius:8px;height:200px;overflow:auto;font-family:monospace;font-size:13px"></pre>
     </div>
 
-        <div class="buttons">
+        <div class="buttons" style="margin-top:12px">
           <button id="uploadCookies" class="btn-upload btn">Upload Cookies</button>
           <button id="startBtn" class="btn-start btn">Start</button>
           <button id="stopBtn" class="btn-stop btn">Stop</button>
@@ -285,6 +350,16 @@
 
     <footer>© 2025 Facebook Automation Tool — Developed With ❤️ by BULLET TEAM</footer>
   </div>
+
+  <!-- Modal for viewing full cookie/reason -->
+  <div id="fullViewModal" role="dialog" aria-hidden="true">
+    <div class="modal-body" role="document">
+      <button class="modal-close" id="modalCloseBtn">Close</button>
+      <h3 style="margin-top:6px;margin-bottom:8px;">Full value</h3>
+      <pre id="fullViewContent" style="white-space:pre-wrap; word-break:break-all;"></pre>
+    </div>
+  </div>
+
 <script>
   // UI references
   const adminInput = document.getElementById('adminToken');
@@ -298,57 +373,57 @@
   let cookiesText = null;
   let currentJobId = null;
   let eventSource = null;
-let retryDelay = 1000;
-/* --- OPTION SETS + renderer (পেস্ট করে রাখো script এর উপরে যত তাড়াতাড়ি সম্ভব) --- */
-const OPTION_SETS = {
-  profile: [
-    'Problem involving someone under 18',
-    'Bullying, harassment or abuse',
-    'Violent, hateful or disturbing content',
-    'Adult content',
-    'Fake profile'
-  ],
-  page: [
-    'Problem involving someone under 18',
-    'Bullying, harassment or abuse',
-    'Violent, hateful or disturbing content',
-    'Adult content',
-    'Fake page'
-  ],
-  post: [
-    'Problem involving someone under 18',
-    'Bullying, harassment or abuse',
-    'Violent, hateful or disturbing content',
-    'Adult content'
-  ]
-};
+  let retryDelay = 1000;
 
-function renderOptions(type){
-  const optionsBox = document.getElementById('optionsBox');
-  if(!optionsBox) return console.warn('No #optionsBox found in DOM');
-  optionsBox.innerHTML = '';
-  (OPTION_SETS[type] || []).forEach((opt, i) => {
-    const id = `${type}-opt-${i}`;
-    const div = document.createElement('div');
-    div.className = 'option-item';
-    div.innerHTML = `<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
-    optionsBox.appendChild(div);
+  /* --- OPTION SETS + renderer --- */
+  const OPTION_SETS = {
+    profile: [
+      'Problem involving someone under 18',
+      'Bullying, harassment or abuse',
+      'Violent, hateful or disturbing content',
+      'Adult content',
+      'Fake profile'
+    ],
+    page: [
+      'Problem involving someone under 18',
+      'Bullying, harassment or abuse',
+      'Violent, hateful or disturbing content',
+      'Adult content',
+      'Fake page'
+    ],
+    post: [
+      'Problem involving someone under 18',
+      'Bullying, harassment or abuse',
+      'Violent, hateful or disturbing content',
+      'Adult content'
+    ]
+  };
+
+  function renderOptions(type){
+    const optionsBox = document.getElementById('optionsBox');
+    if(!optionsBox) return console.warn('No #optionsBox found in DOM');
+    optionsBox.innerHTML = '';
+    (OPTION_SETS[type] || []).forEach((opt, i) => {
+      const id = `${type}-opt-${i}`;
+      const div = document.createElement('div');
+      div.className = 'option-item';
+      div.innerHTML = `<input type="checkbox" id="${id}" data-text="${opt}" /><label for="${id}">${opt}</label>`;
+      optionsBox.appendChild(div);
+    });
+  }
+
+  /* bind radios (safety: run after DOM available) */
+  window.addEventListener('DOMContentLoaded', () => {
+    const radios = document.querySelectorAll('input[name=rtype]');
+    radios.forEach(r => r.addEventListener('change', () => {
+      const t = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
+      renderOptions(t);
+    }));
+    // initial render
+    const cur = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
+    renderOptions(cur);
   });
-}
 
-/* bind radios (safety: run after DOM available) */
-window.addEventListener('DOMContentLoaded', () => {
-  const radios = document.querySelectorAll('input[name=rtype]');
-  radios.forEach(r => r.addEventListener('change', () => {
-    const t = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
-    renderOptions(t);
-  }));
-  // initial render
-  const cur = document.querySelector('input[name=rtype]:checked')?.value || 'profile';
-  renderOptions(cur);
-});
-
-  
   // helper logger
   function log(msg) {
     const now = new Date().toLocaleTimeString();
@@ -421,6 +496,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cookieLogEl.scrollTop = cookieLogEl.scrollHeight;
   }
 
+  // upload form (the smaller cookie textarea/file upload)
   document.getElementById('uploadForm').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
@@ -440,28 +516,83 @@ window.addEventListener('DOMContentLoaded', () => {
       logCookie('[upload] response: ' + JSON.stringify(j));
       document.getElementById('uploadResult').textContent = JSON.stringify(j);
       fetchCookieList();
-    } catch(e){ logCookie('[upload] error ' + e.message); }
+    } catch(e){ logCookie('[upload] error ' + (e && e.message)); }
   });
 
+  // ===== helpers for modal + text utils =====
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+  }
+  function shorten(s, n) {
+    if (!s) return '';
+    s = String(s);
+    return s.length > n ? s.slice(0,n) + '...' : s;
+  }
+  function showFullModal(text) {
+    const modal = document.getElementById('fullViewModal');
+    const content = document.getElementById('fullViewContent');
+    content.textContent = text || '';
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden','false');
+  }
+  document.addEventListener('click', (ev) => {
+    if (ev.target && ev.target.id === 'modalCloseBtn') {
+      const modal = document.getElementById('fullViewModal');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden','true');
+    }
+  });
+
+  // ===== REPLACEMENT fetchCookieList =====
   async function fetchCookieList(){
     const adminToken = adminInput.value.trim() || localStorage.getItem('adminToken') || '';
-    if (!adminToken) return;
+    if (!adminToken) {
+      logCookie('[fetchList] missing admin token');
+      return;
+    }
     const sid = 'default';
     try{
-      const r = await fetch(`/cookieList?sessionId=${sid}&adminToken=${encodeURIComponent(adminToken)}`);
+      const r = await fetch(`/cookieList?sessionId=${encodeURIComponent(sid)}&adminToken=${encodeURIComponent(adminToken)}`);
+      if (!r.ok) { logCookie('[fetchList] server not ok: ' + r.status); return; }
       const j = await r.json();
-      document.getElementById('summary').textContent = JSON.stringify(j.counts);
+      document.getElementById('summary').textContent = JSON.stringify(j.counts || { total:0, live:0, invalid:0, parsed:0, error:0 });
       const tbody = document.querySelector('#cookieTable tbody');
       tbody.innerHTML='';
-      for(const c of j.cookies){
+      for(const c of (j.cookies||[])){
         const status = c.validateResult ? c.validateResult.status : (c.isAccount ? 'parsed' : 'invalid');
         const reason = c.validateResult ? (c.validateResult.reason||c.validateResult.url||'') : '';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${c.lineIndex}</td><td>${c.snippet}</td><td>${status}</td><td>${reason}</td><td>${c.parsedAt}</td>`;
+
+        // snippet: prefer c.originalLine or c.snippet
+        const fullSnippet = c.originalLine || (c.snippet || '');
+        const snippetShort = shorten(fullSnippet, 140);
+
+        tr.innerHTML = `
+          <td style="width:44px">${c.lineIndex || ''}</td>
+          <td class="snippet" title="${escapeHtml(fullSnippet)}">${escapeHtml(snippetShort)}</td>
+          <td style="width:90px">${escapeHtml(status)}</td>
+          <td class="reason" title="${escapeHtml(reason)}">${escapeHtml(shorten(reason,140))}</td>
+          <td style="width:170px">${escapeHtml(c.parsedAt || '')}</td>
+        `;
+
+        // action cell -> view full button (shows both cookie and reason)
+        const actionTd = document.createElement('td');
+        actionTd.className = 'action';
+        const btn = document.createElement('button');
+        btn.className = 'btn-view-full';
+        btn.textContent = 'View full';
+        btn.dataset.full = fullSnippet + (reason ? '\n\nReason/URL: ' + reason : '');
+        btn.onclick = (ev) => showFullModal(ev.currentTarget.dataset.full || '');
+        actionTd.appendChild(btn);
+        tr.appendChild(actionTd);
+
         tbody.appendChild(tr);
       }
-      logCookie('[fetchList] ok total:'+j.total);
-    } catch(e){ logCookie('[fetchList] error '+e.message); }
+      logCookie('[fetchList] ok total:'+ (j.total || (j.cookies ? j.cookies.length : 0)));
+    } catch(e){
+      logCookie('[fetchList] error '+ (e && e.message));
+    }
   }
 
   document.getElementById('refreshList').addEventListener('click', fetchCookieList);
@@ -535,119 +666,113 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // SSE connect (server route expects /events?sessionId=...)
+  function connectLogs(sessionId) {
+    // close any old connection
+    disconnectLogs();
 
-function connectLogs(sessionId) {
-  // close any old connection
-  disconnectLogs();
+    try {
+      const url = '/events?sessionId=' + encodeURIComponent(sessionId);
 
-  try {
-    // If your server does require admin token for events, append it here:
-    // const adminToken = localStorage.getItem('adminToken') || '';
-    // const url = '/events?sessionId=' + encodeURIComponent(sessionId) + '&adminToken=' + encodeURIComponent(adminToken);
-    const url = '/events?sessionId=' + encodeURIComponent(sessionId);
+      eventSource = new EventSource(url);
 
-    eventSource = new EventSource(url);
+      eventSource.onopen = () => {
+        log('SSE connected');
+        retryDelay = 1000;
+        // UI: mark job running
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      };
 
-    eventSource.onopen = () => {
-      log('SSE connected');
-      retryDelay = 1000;
-      // UI: mark job running
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-    };
+      // generic message (server may send default messages)
+      eventSource.onmessage = (e) => {
+        let txt = e.data;
+        try {
+          const p = JSON.parse(e.data);
+          if (p && typeof p === 'object') {
+            if (p.msg && p.account) txt = `[${p.msg}] account=${p.account}`;
+            else txt = JSON.stringify(p);
+          }
+        } catch(_) {}
+        log(txt);
+      };
 
-    // generic message (server may send default messages)
-    eventSource.onmessage = (e) => {
-      let txt = e.data;
-      try {
-        const p = JSON.parse(e.data);
-        // if server sends structured payload, pretty print important bits
-        if (p && typeof p === 'object') {
-          // try human readable
-          if (p.msg && p.account) txt = `[${p.msg}] account=${p.account}`;
-          else txt = JSON.stringify(p);
-        }
-      } catch(_) {}
-      log(txt);
-    };
+      // named events that server may emit -- handle them explicitly
+      eventSource.addEventListener('log', (e) => { try { log(e.data); } catch(_){} });
+      eventSource.addEventListener('info', (e) => { try { log('[info] ' + e.data); } catch(_){} });
+      eventSource.addEventListener('warn', (e) => { try { log('[warn] ' + e.data); } catch(_){} });
+      eventSource.addEventListener('error', (e) => { try { log('[server-error] ' + e.data); } catch(_){} });
 
-    // named events that server may emit -- handle them explicitly
-    eventSource.addEventListener('log', (e) => { try { log(e.data); } catch(_){} });
-    eventSource.addEventListener('info', (e) => { try { log('[info] ' + e.data); } catch(_){} });
-    eventSource.addEventListener('warn', (e) => { try { log('[warn] ' + e.data); } catch(_){} });
-    eventSource.addEventListener('error', (e) => { try { log('[server-error] ' + e.data); } catch(_){} });
-
-    // success/done/fatal for run lifecycle
-    eventSource.addEventListener('success', (e) => { try { log('[success] ' + e.data); } catch(_){} });
-    eventSource.addEventListener('done', (e) => {
-      try {
-        log('[done] ' + e.data);
-      } catch(_) {}
-      // job finished — cleanup UI
-      disconnectLogs();
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-    });
-    eventSource.addEventListener('fatal', (e) => {
-      try { log('[fatal] ' + e.data); } catch(_) {}
-      disconnectLogs();
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-    });
-
-    eventSource.onerror = (e) => {
-      // server closed stream or network error
-      log('[SSE error] stream closed or network error');
-      try { eventSource.close(); } catch(_) {}
-      // exponential backoff reconnect (only if we still have a currentJobId)
-      if (currentJobId) {
-        setTimeout(() => {
-          log(`[SSE] reconnecting (delay ${retryDelay}ms)`);
-          connectLogs(currentJobId);
-          retryDelay = Math.min(30000, Math.floor(retryDelay * 1.8));
-        }, retryDelay);
-      } else {
-        // no job active: ensure UI unlocked
+      // success/done/fatal for run lifecycle
+      eventSource.addEventListener('success', (e) => { try { log('[success] ' + e.data); } catch(_){} });
+      eventSource.addEventListener('done', (e) => {
+        try {
+          log('[done] ' + e.data);
+        } catch(_) {}
+        // job finished — cleanup UI
+        disconnectLogs();
         startBtn.disabled = false;
         stopBtn.disabled = true;
-      }
-    };
-  } catch (err) {
-    log('[EventSource not available — using polling fallback]');
-    // fallback polling
-    eventSource = { closed:false, timer:null };
-    async function poll(){
-      if (eventSource.closed) return;
-      try {
-        const r = await fetch('/status', {
-          headers: { 'x-admin-token': localStorage.getItem('adminToken') || '' }
-        });
-        if (r.ok) {
-          const j = await r.json().catch(()=>null);
-          if (j && Array.isArray(j.logs)) {
-            for (const l of j.logs) log(l);
-          }
-        }
-      } catch (e) {}
-      eventSource.timer = setTimeout(poll, 2000);
-    }
-    poll();
-  }
-}
+      });
+      eventSource.addEventListener('fatal', (e) => {
+        try { log('[fatal] ' + e.data); } catch(_) {}
+        disconnectLogs();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
 
-function disconnectLogs(){
-  if (eventSource) {
-    try {
-      if (eventSource.close) eventSource.close();
-      if (eventSource.timer) clearTimeout(eventSource.timer);
-    } catch(e){}
-    eventSource = null;
+      eventSource.onerror = (e) => {
+        // server closed stream or network error
+        log('[SSE error] stream closed or network error');
+        try { eventSource.close(); } catch(_) {}
+        // exponential backoff reconnect (only if we still have a currentJobId)
+        if (currentJobId) {
+          setTimeout(() => {
+            log(`[SSE] reconnecting (delay ${retryDelay}ms)`);
+            connectLogs(currentJobId);
+            retryDelay = Math.min(30000, Math.floor(retryDelay * 1.8));
+          }, retryDelay);
+        } else {
+          // no job active: ensure UI unlocked
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
+      };
+    } catch (err) {
+      log('[EventSource not available — using polling fallback]');
+      // fallback polling
+      eventSource = { closed:false, timer:null };
+      async function poll(){
+        if (eventSource.closed) return;
+        try {
+          const r = await fetch('/status', {
+            headers: { 'x-admin-token': localStorage.getItem('adminToken') || '' }
+          });
+          if (r.ok) {
+            const j = await r.json().catch(()=>null);
+            if (j && Array.isArray(j.logs)) {
+              for (const l of j.logs) log(l);
+            }
+          }
+        } catch (e) {}
+        eventSource.timer = setTimeout(poll, 2000);
+      }
+      poll();
+    }
   }
-  currentJobId = null;
-  // UI buttons
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-}
+
+  function disconnectLogs(){
+    if (eventSource) {
+      try {
+        if (eventSource.close) eventSource.close();
+        if (eventSource.timer) clearTimeout(eventSource.timer);
+      } catch(e){}
+      eventSource = null;
+    }
+    currentJobId = null;
+    // UI buttons
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  }
 
   // initial message
   log('WELCOME KING 👑 YOUR BRAHMARSTA IS READY.');
